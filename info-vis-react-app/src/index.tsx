@@ -1,15 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { RecoilRoot } from 'recoil';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
+import Home from './views/home';
 
 ReactDOM.render(
-  <React.StrictMode>
-    <div>
-      Hello World 2
-    </div>
-  </React.StrictMode>,
-  document.getElementById('root')
+	<React.StrictMode>
+		<RecoilRoot>
+			<Home/>
+		</RecoilRoot>
+	</React.StrictMode>,
+	document.getElementById('root')
 );
 
 // If you want to start measuring performance in your app, pass a function
