@@ -12,7 +12,7 @@ const Home: React.FC<{}> = () => {
             <button onClick={() => {
                 setNumber(number+1)
             }}>
-                Mer hej mamma
+                Mer hej mamma, king halal mode! Let's goooo kony 2012
             </button>
         </div>
     )   
