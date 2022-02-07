@@ -1,8 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { RecoilRoot } from 'recoil';
-import './index.css';
-import Root from './views/root';
+import Root from './root';
 
 ReactDOM.render(
 	<React.StrictMode>
