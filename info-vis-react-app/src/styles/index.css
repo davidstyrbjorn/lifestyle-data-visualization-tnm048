@@ -32,3 +32,8 @@ body {
 .sidebar .bot {
     flex: 1;
 }
+
+.checkbox {
+    display: block;
+    align-items: center;
+}

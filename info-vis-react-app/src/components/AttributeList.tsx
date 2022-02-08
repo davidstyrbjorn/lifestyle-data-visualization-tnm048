@@ -13,7 +13,7 @@ const AttributeList: React.FC<{}> = () => {
 
     // Removes the index of the attribute clicked from selectedattributes
     const removeSelectedAttribute = (i: number) => {
-        setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes.filter(index => index != i)]})
+        setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes.filter(index => index !== i)]})
     }
 
     // Switching ticked state on the checkbox 
@@ -32,17 +32,31 @@ const AttributeList: React.FC<{}> = () => {
         return attribute.selectedAttributes.includes(index);
     }
 
-    // @TODO: Fix flist formatting
     return (<div>
         <ul>
             {attribute.availableAttributes.map((val, idx) => {
-                return (                                            // Checked is a variable              // onChange is a function handler
-                    <FormControlLabel control={<Checkbox checked = {isAttributeSelected(idx)} onChange = {() => onCheckBoxChange(idx)} />} label={val} />
+                return (
+                    <div className = "checkbox">
+                                                                     {/*Checked is a variable                 onChange is a function handler*/}                                                                       
+                        <FormControlLabel control={<Checkbox checked = {isAttributeSelected(idx)} onChange = {() => onCheckBoxChange(idx)} />} label={val} />
+                    </div> 
                 )
             })}
         </ul>
+        
+        Chosen attributes:
+        <ul>
+            {
+                // Just to check the selection works
+                attribute.selectedAttributes.map((val, idx) => {
+                    return (
+                        <div className = "checkbox">
+                            {attribute.availableAttributes[val]}
+                        </div>
+                    )
+                })}
+        </ul>
     </div>);
 }
-
 
 export default AttributeList;
