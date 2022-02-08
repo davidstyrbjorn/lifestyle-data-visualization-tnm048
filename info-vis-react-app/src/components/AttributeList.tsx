@@ -1,28 +1,23 @@
 import { Checkbox, FormControlLabel } from "@mui/material";
-import React, { useState } from "react";
+import React from "react";
 import { useRecoilState } from "recoil";
 import attributeState from "../states/attribute-state";
+import { attribute_options } from "../types/types";
+import { makeAttributePresentable } from "../util/attribute-util";
 
 const AttributeList: React.FC<{}> = () => {
+    // Grab the attribute state
     const [attribute, setAttribute] = useRecoilState(attributeState);
-
-    // Adds the index of a selected (checked) attribute to the selectedattributes list
-    const addSelectedAttribute = (i: number) => {
-        setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes, i]})
-    }
-
-    // Removes the index of the attribute clicked from selectedattributes
-    const removeSelectedAttribute = (i: number) => {
-        setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes.filter(index => index !== i)]})
-    }
 
     // Switching ticked state on the checkbox 
     const onCheckBoxChange = (index: number) => {
         if (!isAttributeSelected(index)) {
-            addSelectedAttribute(index);
+            // Add selected index!
+            setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes, index]})
         }
         else {
-            removeSelectedAttribute(index)
+            // Remove selected index
+            setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes.filter(index => index !== index)]})
         }
 
     }
@@ -32,13 +27,18 @@ const AttributeList: React.FC<{}> = () => {
         return attribute.selectedAttributes.includes(index);
     }
 
-    return (<div>
+    return (
+    <div>
         <ul>
-            {attribute.availableAttributes.map((val, idx) => {
+            {attribute.availableAttributes.map((val: attribute_options, idx: number) => {
                 return (
-                    <div className = "checkbox">
-                                                                     {/*Checked is a variable                 onChange is a function handler*/}                                                                       
-                        <FormControlLabel control={<Checkbox checked = {isAttributeSelected(idx)} onChange = {() => onCheckBoxChange(idx)} />} label={val} />
+                    <div className = "checkbox" key={idx}>
+                        <FormControlLabel 
+                            control={
+                                <Checkbox checked={isAttributeSelected(idx)} onChange={() => onCheckBoxChange(idx)} />
+                            } 
+                            label={makeAttributePresentable(val)} 
+                        />
                     </div> 
                 )
             })}
@@ -48,15 +48,16 @@ const AttributeList: React.FC<{}> = () => {
         <ul>
             {
                 // Just to check the selection works
-                attribute.selectedAttributes.map((val, idx) => {
+                attribute.selectedAttributes.map((val: number, idx: number) => {
                     return (
-                        <div className = "checkbox">
+                        <div className = "checkbox" key={idx}>
                             {attribute.availableAttributes[val]}
                         </div>
                     )
                 })}
         </ul>
-    </div>);
+    </div>
+    );
 }
 
 export default AttributeList;

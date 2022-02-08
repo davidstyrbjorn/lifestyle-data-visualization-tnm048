@@ -6,8 +6,16 @@ export type visualization_type = {
     // ...
 }
 
+// These reflect what's inside the json files for each person!
+export type attribute_options = "fatigue" | 
+                                "mood" |    
+                                "readiness" | 
+                                "sleep_duration_h" | 
+                                "sleep_quality" | 
+                                "stress" | 
+                                "glasses_of_fluid" | 
+                                "bodyweight";
 export type attribute_type = {
-    availableAttributes: Array<string>,
+    availableAttributes: Array<attribute_options>,
     selectedAttributes: Array<number>
 }
-    
