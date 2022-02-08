@@ -1,0 +1,34 @@
+body {
+    padding: 0;
+    margin: 0
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    height:100vh
+}
+
+.visualization-view {
+    background-color: #38342F;
+    flex: 3;
+}
+
+.sidebar {
+    background-color:azure;
+    flex: 1;
+}
+
+.sidebar {
+    flex-direction: column;
+    display: flex;
+}
+
+.sidebar .top {
+    flex: 1;
+    border-bottom: 6px #C4C4C4 solid;
+}
+
+.sidebar .bot {
+    flex: 1;
+}
