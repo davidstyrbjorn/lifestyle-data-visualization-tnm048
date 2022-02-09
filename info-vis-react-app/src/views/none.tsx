@@ -6,7 +6,6 @@ import { visualization_options } from '../types/types';
 const None : React.FC<{}> = () => {
     const [visualization, setVisualization] = useRecoilState(visualizationState);
 
-
     const switchVisualizationState = (option: visualization_options) => {
         setVisualization({...visualization, option: option});
     }
