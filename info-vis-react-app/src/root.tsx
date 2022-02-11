@@ -7,6 +7,7 @@ import './styles/index.css'
 import Sidebar from "./views/sidebar";
 import BarChart from "./components/d3/CircleD3";
 import CircleD3 from "./components/d3/CircleD3";
+import ParallellAxis from "./components/d3/ParallellAxis"
 
 const Root: React.FC<{}> = () => {
     const visualizationOption = useRecoilValue(visualizationOptionSelector);
@@ -17,6 +18,7 @@ const Root: React.FC<{}> = () => {
                 {visualizationOption === 'none' && <None/>}
                 {visualizationOption === 'parallell-axis' && <CircleD3/>}
                 {visualizationOption=== 'spider' && <div>SPINDEL</div>}
+                <ParallellAxis/>
             </div>
             <Sidebar/>
         </div>
