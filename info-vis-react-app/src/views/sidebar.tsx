@@ -1,6 +1,6 @@
 import React from 'react';
 import AttributeList from '../components/AttributeList';
-import PeopleList from '../components/PeopleList'
+import PersonCheckbox from '../components/PersonCheckbox'
 
 const Sidebar: React.FC<{}> = () => {
     return (
@@ -11,7 +11,7 @@ const Sidebar: React.FC<{}> = () => {
             </div>  
             <div className='bot'>
                 <p>Bot side!</p>
-                <PeopleList/>
+                <PersonCheckbox/>
             </div>  
         </div>
     );

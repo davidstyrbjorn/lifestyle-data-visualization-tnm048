@@ -4,6 +4,7 @@ const personState = atom<any>({
     key: 'personState',
     default: {
         name: 'p01',
+        selected: false,
         data: []
     }
 });
