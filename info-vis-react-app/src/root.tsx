@@ -5,6 +5,8 @@ import None from "./views/none";
 
 import './styles/index.css'
 import Sidebar from "./views/sidebar";
+import BarChart from "./components/d3/CircleD3";
+import CircleD3 from "./components/d3/CircleD3";
 
 const Root: React.FC<{}> = () => {
     const visualizationOption = useRecoilValue(visualizationOptionSelector);
@@ -13,7 +15,7 @@ const Root: React.FC<{}> = () => {
             <div className={'visualization-view'}>
                 {/* DECIDE ON WHICH VISUALIZATION COMPONENT TO RENDER */}
                 {visualizationOption === 'none' && <None/>}
-                {visualizationOption === 'parallell-axis' && <div>PARALLELL AXEL</div>}
+                {visualizationOption === 'parallell-axis' && <CircleD3/>}
                 {visualizationOption=== 'spider' && <div>SPINDEL</div>}
             </div>
             <Sidebar/>
