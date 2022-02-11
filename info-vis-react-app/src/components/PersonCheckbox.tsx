@@ -1,53 +1,27 @@
 import React from "react";
-import personState, { personSelectedState } from "../states/person-state";
+import { personSelectedState } from "../states/person-state";
 import { Checkbox, FormControlLabel } from "@mui/material";
-import { atomFamily, useRecoilState } from "recoil";
-import { person_information } from "../types/types";
+import { useRecoilState } from "recoil";
 
-export function PersonCheckbox(props: person_information) {
-    const { name } = props;
-    const[isSelected, setSelected] = useRecoilState(personSelectedState(props.name));
-    const setPersons = useRecoilState(personState);
-    return(
-        <div></div>
-    )
+type Props = {
+    name: string
 }
 
-export const checkboxSelectedState = atomFamily<>
+export const PersonCheckbox: React.FC<Props> = ( {name} ) => {
+    // Get information from selection state of the person
+    const[isSelected, setSelected] = useRecoilState(personSelectedState(name));
 
-// const PersonCheckbox: React.FC<{}> = () => {
-//     const [person, setPerson] = useRecoilState(personState);
+    // Reverse selection state value
+    const onCheckBoxChange = () => setSelected(prevState => !prevState);
 
-//     // Switching ticked state on the checkbox 
-//     const onCheckBoxChange = () => {
-//         setPerson({...person, selected: !person.selected})
-//     }
-
-//     // return(
-//     //     <div>
-//     //         <ul>
-//     //             <div className = "checkbox" key={person.name}>
-//     //                     <FormControlLabel 
-//     //                         control={
-//     //                             <Checkbox checked={person.selected} onChange={() => onCheckBoxChange()} />
-//     //                         } 
-//     //                         label={person.name} 
-//     //                     />
-//     //             </div>
-//     //         </ul>
-//     //     </div>
-//     // )
-//     export function PersonCheckbox(props: PersonList) {
-//         return(
-//             <div></div>
-//         )
-//     }
-// }
-
-// export function PersonCheckbox(props: PersonList) {
-//     return(
-//         <div></div>
-//     )
-// }
-
-// //export default PeopleList;
+    return(
+        <div>
+            <FormControlLabel 
+                control={
+                    <Checkbox checked={isSelected} onChange={() => onCheckBoxChange()} />
+                } 
+                label={name} 
+            />
+        </div>
+    )
+}

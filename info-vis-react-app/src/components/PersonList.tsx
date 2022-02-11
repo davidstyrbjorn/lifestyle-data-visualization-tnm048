@@ -1,26 +1,17 @@
 import React from "react";
 import { useRecoilValue } from "recoil";
-import { personState } from "../states/person-state";
+import { availablePersonState } from "../states/person-state";
 import { PersonCheckbox } from "./PersonCheckbox";
 
-export function PersonList() {
-    const people = useRecoilValue(personState);
+export const PersonList: React.FC<{}> = () => {
+    const people = useRecoilValue(availablePersonState);
+
+    // Map over all people to make list of checkboxes
     return(
         <div>
-            {people.map(personProps => (
-                <PersonCheckbox {...personProps} key = {personProps.name}/>
+            {people.map((name, idx) => (
+                <PersonCheckbox name={name} key = {idx}/>
             ))}
-
         </div>
     )
 }
-
-// const PersonList: React.FC<{}> = (people, togglePerson) => {
-//     return(
-//         people.map(people, togglePerson) => {
-//             return <PersonCheckbox/>
-//         })
-//     )
-// }
-
-// export default PersonList;
