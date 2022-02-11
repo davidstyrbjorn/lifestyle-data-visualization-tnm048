@@ -19,3 +19,7 @@ export type attribute_type = {
     availableAttributes: Array<attribute_options>,
     selectedAttributes: Array<number>
 }
+
+export interface person_information {
+    name: string;
+}

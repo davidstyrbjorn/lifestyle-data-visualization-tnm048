@@ -1,12 +1,12 @@
-import { atom } from "recoil";
+import { atom, atomFamily } from "recoil";
+import { person_information } from "../types/types";
 
-const personState = atom<any>({
+export const personState = atom<person_information[]>({
     key: 'personState',
-    default: {
-        name: 'p01',
-        selected: false,
-        data: []
-    }
+    default: []
 });
 
-export default personState;
+export const personSelectedState = atomFamily<boolean, string>({
+    key: 'personSelectedState',
+    default: false,
+});
