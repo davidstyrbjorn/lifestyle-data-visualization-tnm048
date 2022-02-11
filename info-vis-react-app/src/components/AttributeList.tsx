@@ -17,7 +17,7 @@ const AttributeList: React.FC<{}> = () => {
         }
         else {
             // Remove selected index
-            setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes.filter(index => index !== index)]})
+            setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes.filter(idx => index !== idx)]})
         }
 
     }
