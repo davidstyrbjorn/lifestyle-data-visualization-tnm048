@@ -21,6 +21,7 @@ export type attribute_type = {
 }
 
 export type person_data = {
+    name: string;
     lifestyle: Array<{
         date: string;
         fatigue: number;

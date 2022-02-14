@@ -7,6 +7,7 @@ export function getPersonData(name: string) : person_data {
     // Load from .json file from disk and turn it into person_data
     const fileName = name + '.json';
     const person = require("../json/" + fileName) as person_data;
+    person.name = name;
     return person;
 }
 
