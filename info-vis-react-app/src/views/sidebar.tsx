@@ -1,5 +1,6 @@
 import React from 'react';
 import AttributeList from '../components/AttributeList';
+import { PersonList } from '../components/PersonList';
 
 const Sidebar: React.FC<{}> = () => {
     return (
@@ -10,6 +11,7 @@ const Sidebar: React.FC<{}> = () => {
             </div>  
             <div className='bot'>
                 <p>Bot side!</p>
+                <PersonList/>
             </div>  
         </div>
     );
