@@ -20,7 +20,7 @@ for i in range(1,N+1):
 
     # Data structure for each person    
     data = {
-        "life-style": [
+        "lifestyle": [
 
         ],
         "training_log": [
@@ -48,7 +48,7 @@ for i in range(1,N+1):
 
                 # we have an entry where date exists in both lists
                 # append to our life-style log json entry
-                data['life-style'].append({
+                data['lifestyle'].append({
                     "date": str(d), # the date
                     "fatigue": int(pmsys_wellness['fatigue'][i]),
                     "mood": int(pmsys_wellness['mood'][i]),

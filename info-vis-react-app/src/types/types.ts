@@ -19,3 +19,17 @@ export type attribute_type = {
     availableAttributes: Array<attribute_options>,
     selectedAttributes: Array<number>
 }
+
+export type person_data = {
+    name: string;
+    lifestyle: Array<{
+        date: string;
+        fatigue: number;
+        mood: number;
+        readiness: number;
+        sleep_duration_h: number;
+        sleep_quality: number;
+        glasses_of_fluid: number;
+        bodyweight: number;
+    }>
+}
