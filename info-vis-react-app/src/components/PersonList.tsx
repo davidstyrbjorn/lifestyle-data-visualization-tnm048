@@ -11,7 +11,7 @@ export const PersonList: React.FC<{}> = () => {
     }, [personData])
 
     return(
-        <div>
+        <div id='personList'>
             {/* Map over all people to make list of checkboxes */}
             {availablePerson.map((name, idx) => (
                 <PersonCheckbox name={name} key = {idx}/>
