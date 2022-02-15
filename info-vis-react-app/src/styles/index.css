@@ -14,6 +14,12 @@ body {
     flex: 3;
 }
 
+#personList {
+    height: 40%;
+    overflow-y: scroll;
+    white-space: nowrap;
+}
+
 .sidebar {
     background-color:azure;
     flex: 1;
