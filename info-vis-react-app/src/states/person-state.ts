@@ -3,7 +3,13 @@ import { person_data } from "../types/types";
 import { loadAllPersonDataIntoMap } from "../util/person-util";
 
 // Holds all available person strings, which can then be used to read from a .json file where all the data is actually stored
-const availablePerson: string[] = ['p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07', 'p08']; // TODO: Get all available json files instead
+
+// TODO: Get all available json files instead
+const availablePerson: string[] = [
+'p01', 'p02', 'p03', 'p04',
+'p05', 'p06', 'p07', 'p08',
+'p10', 'p11', 'p12', 'p13',
+'p14', 'p15', 'p16'];
 
 export const loadedPersonData = atom<Map<string, person_data>>({
     key: 'loadedPersonData',
