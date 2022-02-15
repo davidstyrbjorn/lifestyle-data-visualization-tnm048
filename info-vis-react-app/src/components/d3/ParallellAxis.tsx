@@ -15,7 +15,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
         const margin = {top: 50, right: 50, bottom: 50, left: 50}
         const width = 600 - margin.left - margin.right;
         const height =  600 - margin.top - margin.bottom;
-        d3.select("plot")
+        var svg:any = d3.select("plot")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -24,7 +24,16 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
         if (data.length !== 0) {
             console.log("D3", data);
-            const attributes = Object.keys(data[0].lifestyle[0]);
+            const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
+            // Removing date
+            const attributes:string[] = []; 
+            attr.forEach(function (item, index) {
+                if (index > 0) {
+                    attributes.push(attr[index]);
+                }
+            });
+
+
             const y:any = {}
             // https://www.d3-graph-gallery.com/graph/parallel_basic.html
             for (var i = 1; i < attributes.length; i++) {
@@ -39,7 +48,37 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .domain([min, max])
                 .range([height, 0])
             }
-            console.log(y)
+
+            const x = d3.scalePoint()
+            .range([0, width])
+            .padding(1)
+            .domain(attributes)
+
+            const lineData: [any, any][] = [];
+            
+
+            attributes.map(function(a) {
+                lineData.push([
+                    x(a),
+                    data[0].lifestyle[0][a as keyof Object]
+                ]);
+            });
+
+            console.log(lineData);
+            /*function path(d) {
+                return d3.line()(attributes.map( 
+                function(a) { console.log(x(a)); return [x(a), data[0].lifestyle[0][a as keyof Object]];}));
+            }*/
+
+            /*svg
+            .selectAll("myPath")
+            .data(data)
+            .enter().append("path")
+            .attr("d",  path)
+            .style("fill", "none")
+            .style("stroke", "#69b3a2")
+            .style("opacity", 0.5)*/
+            
         }
     }, [data] )
 
@@ -50,11 +89,10 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
         </div>
         /*
-        <svg ref = {ref}>
-            <div id = "plot">
-                Test
-            </div>
-        </svg>*/
+        <div id = "plot" ref = {ref}>
+            Test
+        </div>
+        */
     );
 } 
 
