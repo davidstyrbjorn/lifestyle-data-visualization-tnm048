@@ -2,12 +2,11 @@ import React from "react";
 import { useRecoilValue } from "recoil";
 import { visualizationOptionSelector } from "./states/visualization-state";
 import None from "./views/none";
-
-import './styles/index.css'
 import Sidebar from "./views/sidebar";
-import BarChart from "./components/d3/CircleD3";
 import CircleD3 from "./components/d3/CircleD3";
 import LinePlotD3 from "./components/d3/LinePlotD3";
+
+import './styles/layout.scss';
 
 const Root: React.FC<{}> = () => {
     const visualizationOption = useRecoilValue(visualizationOptionSelector);

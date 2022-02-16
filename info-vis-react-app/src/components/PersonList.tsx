@@ -4,7 +4,6 @@ import availablePerson, { filteredPersonData, loadedPersonData } from "../states
 import { PersonCheckbox } from "./PersonCheckbox";
 
 export const PersonList: React.FC<{}> = () => {
-
     return(
         <div>
             {/* Map over all people to make list of checkboxes */}

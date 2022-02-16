@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import * as d3 from 'd3';
+import React from 'react';
 import { useRecoilValue } from 'recoil';
 import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
-import * as d3 from 'd3';
-import { lifestyle, person_data } from '../../types/types';
+import { lifestyle } from '../../types/types';
+
+import '../../styles/components/line-plot.scss';
 
 const LinePlotD3: React.FC<{}> = () => {
     // Grab the person data
@@ -13,7 +15,7 @@ const LinePlotD3: React.FC<{}> = () => {
         if(personData.length === 0) return;
 
         // set the dimensions and margins of the graph
-        var margin = {top: 100, right: 100, bottom: 30, left: 100},
+        var margin = {top: 0, right: 0, bottom: 0, left: 0},
             width = 900 - margin.left - margin.right,
             height = 600 - margin.top - margin.bottom;
 
@@ -22,8 +24,8 @@ const LinePlotD3: React.FC<{}> = () => {
         if(previous_svg.length === 0){
             d3.select('#my_dataviz')
                 .append('svg')
-                    .attr('width', width + margin.left + margin.right)
-                    .attr('height', height + margin.top + margin.bottom)
+                    .attr('width', width)
+                    .attr('height', height)
                     .attr('class', 'line-plot-svg')
                 .append('g')
                     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');

@@ -8,7 +8,7 @@ import { makeAttributePresentable } from "../util/attribute-util";
 const AttributeList: React.FC<{}> = () => {
     // Grab the attribute state
     const [attribute, setAttribute] = useRecoilState(attributeState);
-
+    
     // Switching ticked state on the checkbox 
     const onCheckBoxChange = (index: number) => {
         if (!isAttributeSelected(index)) {
