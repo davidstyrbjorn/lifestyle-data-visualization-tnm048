@@ -12,20 +12,21 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
     // Update axis depending on data, useD3 handles like useEffect
     const ref = useD3((div: any) => {
-        // Draw the canvas
-        const margin = {top: 50, right: 50, bottom: 50, left: 50}
-        const width = 600 - margin.left - margin.right;
-        const height =  600 - margin.top - margin.bottom;
-        d3.select("#plot")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        let svg = d3.select("#plot");
 
         if (data.length !== 0) {
+            // Draw the canvas
+            const margin = {top: 50, right: 50, bottom: 50, left: 50}
+            const width = 600 - margin.left - margin.right;
+            const height =  600 - margin.top - margin.bottom;
+            d3.select("#plot")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            let svg = d3.select("#plot");
+
             const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
 
             // Removing date
@@ -35,7 +36,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     attributes.push(attr[index]);
                 }
             });
-
+            // @TODO: Create and scale line data from chosen date.
             // https://www.d3-graph-gallery.com/graph/parallel_basic.html
 
             // Get min and max value of each attribute and create linear scales for each attribute
@@ -66,7 +67,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             attributes.map(function(a) {
                 lineInfo.push([
                     x(a) as number,
-                    data[0].lifestyle[0][a as keyof Object] as unknown as number // Hehe
+                    y[a as keyof Object](data[0].lifestyle[0][a as keyof Object] as unknown as number) // Hehe
                 ]);
             });
 
@@ -75,12 +76,14 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             // Draw lines
             svg.append("path")
                 .datum(lineInfo)
+                .attr("stroke", "white")
+                .attr("stroke-width", 10)
+                .attr('fill', 'none')
                 .attr("d", d3.line() 
                 .x(function(d) {return d[0]})
                 .y(function(d) {return d[1]})
-                )
-                .attr("stroke", "black");
-            
+                );
+
         }
     }, [data] )
 
