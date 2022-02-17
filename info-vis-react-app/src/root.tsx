@@ -4,6 +4,7 @@ import { visualizationOptionSelector } from "./states/visualization-state";
 import None from "./views/none";
 import Sidebar from "./views/sidebar";
 import CircleD3 from "./components/d3/CircleD3";
+import SpiderPlot from "./components/d3/SpiderPlot";
 import LinePlotD3 from "./components/d3/LinePlotD3";
 
 import './styles/layout.scss';
@@ -16,7 +17,7 @@ const Root: React.FC<{}> = () => {
                 {/* DECIDE ON WHICH VISUALIZATION COMPONENT TO RENDER */}
                 {visualizationOption === 'none' && <None/>}
                 {visualizationOption === 'parallell-axis' && <CircleD3/>}
-                {visualizationOption === 'spider' && <div>SPINDEL</div>}
+                {visualizationOption === 'spider' && <SpiderPlot/>}
                 {visualizationOption === 'line-plot' && <LinePlotD3/>}
             </div>
             <Sidebar/>
