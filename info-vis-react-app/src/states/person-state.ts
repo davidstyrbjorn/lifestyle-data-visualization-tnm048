@@ -16,6 +16,7 @@ export const personSelectedState = atomFamily<boolean, string>({
     default: false,
 });
 
+// Boils down and only returns the selected persons data formatted into an array of person_data
 export const filteredPersonData = selector({
     key: 'selectedPersonData',
     get: ({get}) => {               

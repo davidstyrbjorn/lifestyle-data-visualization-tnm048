@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 // dependencies is what variables this d3 code is dependent on, if they change
 // the d3 code will re-run
 const useD3 = (renderChartFn: any, dependencies: any) => {
-    const ref = createRef<SVGSVGElement>();
+    const ref = createRef<HTMLDivElement>();
 
     React.useEffect(() => {
         // @ts-ignore

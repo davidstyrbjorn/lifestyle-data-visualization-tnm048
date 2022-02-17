@@ -4,12 +4,6 @@ import availablePerson, { filteredPersonData, loadedPersonData } from "../states
 import { PersonCheckbox } from "./PersonCheckbox";
 
 export const PersonList: React.FC<{}> = () => {
-    const personData = useRecoilValue(filteredPersonData);
-    
-    useEffect(() => {
-        console.log(personData);
-    }, [personData])
-
     return(
         <div>
             {/* Map over all people to make list of checkboxes */}

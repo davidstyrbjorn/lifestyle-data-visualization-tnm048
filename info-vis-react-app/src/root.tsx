@@ -2,12 +2,11 @@ import React from "react";
 import { useRecoilValue } from "recoil";
 import { visualizationOptionSelector } from "./states/visualization-state";
 import None from "./views/none";
-
-import './styles/index.css'
 import Sidebar from "./views/sidebar";
-import BarChart from "./components/d3/CircleD3";
 import CircleD3 from "./components/d3/CircleD3";
-import ParallellAxis from "./components/d3/ParallellAxis"
+import LinePlotD3 from "./components/d3/LinePlotD3";
+
+import './styles/layout.scss';
 
 const Root: React.FC<{}> = () => {
     const visualizationOption = useRecoilValue(visualizationOptionSelector);
@@ -17,8 +16,8 @@ const Root: React.FC<{}> = () => {
                 {/* DECIDE ON WHICH VISUALIZATION COMPONENT TO RENDER */}
                 {visualizationOption === 'none' && <None/>}
                 {visualizationOption === 'parallell-axis' && <CircleD3/>}
-                {visualizationOption=== 'spider' && <div>SPINDEL</div>}
-                <ParallellAxis/>
+                {visualizationOption === 'spider' && <div>SPINDEL</div>}
+                {visualizationOption === 'line-plot' && <LinePlotD3/>}
             </div>
             <Sidebar/>
         </div>
