@@ -3,7 +3,6 @@ import React from 'react';
 import { useRecoilValue } from 'recoil';
 import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
-import { lifestyle } from '../../types/types';
 
 import '../../styles/components/line-plot.scss';
 
@@ -21,11 +20,14 @@ const SpiderPlot: React.FC<{}> = () => {
     const ref = useD3((div: any) =>  {
         if(personData.length === 0) return;
         else {
+
+            // Linear range with values ranging from 0-5
             let scale = d3.scaleLinear()
-                .domain([1, 5])
+                .domain([0, 5])
                 .range([0, 250]);
 
             let ticks = [1, 2, 3, 4, 5];
+            let center = {x: width/2, y: height/2}
 
             let spiderPlotSvg = d3.select('#spider_viz')
             .append('svg')
@@ -35,11 +37,30 @@ const SpiderPlot: React.FC<{}> = () => {
 
             ticks.forEach(tick => (
                 spiderPlotSvg.append("circle")
-                    .attr("cx", width/2)
-                    .attr("cy", height/2)
+                    .attr("cx", center.x)
+                    .attr("cy", center.y)
                     .attr("fill", "none")
                     .attr("stroke", "azure")
+                    .attr("stroke-width", 5)
                     .attr("r", scale(tick))
+
+                .append("circle")
+                    .attr("cx", center.x + 5)
+                    .attr("cy", center.y - scale(tick))
+                    .attr("fill", "red")
+                    
+                //.append("text")
+                //    .attr("x", center.x + 5)
+                //    .attr("y", center.y - scale(tick))
+                //    .text(tick.toString())
+            ));
+
+            ticks.forEach(tick => (
+                spiderPlotSvg.append("text")
+                    .attr("fill", "azure")
+                    .attr("x", center.x + 15)
+                    .attr("y", center.y - 10 - scale(tick))
+                    .text(tick.toString())
             ));
         }
 
