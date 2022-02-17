@@ -15,6 +15,7 @@ const None : React.FC<{}> = () => {
             <div>No visualization tech choosen!</div>
             <button onClick={() => switchVisualizationState('parallell-axis')}>Press me to show parallell axis!</button>
             <button onClick={() => switchVisualizationState('spider')}>Press me to show spider!</button>
+            <button onClick={() => switchVisualizationState('line-plot')}>Press me to show line-plot</button>
         </div>
     );
 }

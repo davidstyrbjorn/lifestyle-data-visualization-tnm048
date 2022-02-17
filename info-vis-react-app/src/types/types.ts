@@ -1,5 +1,5 @@
 
-export type visualization_options = 'parallell-axis' | 'spider' | 'none';
+export type visualization_options = 'parallell-axis' | 'line-plot' | 'spider' | 'none';
 
 export type visualization_type = {
     option: visualization_options;
@@ -20,16 +20,18 @@ export type attribute_type = {
     selectedAttributes: Array<number>
 }
 
+export type lifestyle = {
+    date: string;
+    fatigue: number;
+    mood: number;
+    readiness: number;
+    sleep_duration_h: number;
+    sleep_quality: number;
+    glasses_of_fluid: number;
+    bodyweight: number;
+}
+
 export type person_data = {
     name: string;
-    lifestyle: Array<{
-        date: string;
-        fatigue: number;
-        mood: number;
-        readiness: number;
-        sleep_duration_h: number;
-        sleep_quality: number;
-        glasses_of_fluid: number;
-        bodyweight: number;
-    }>
+    lifestyle: Array<lifestyle>
 }
