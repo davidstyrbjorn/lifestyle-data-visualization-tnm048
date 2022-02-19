@@ -11,10 +11,11 @@ const SpiderPlot: React.FC<{}> = () => {
     // Grab the person data
     const personData = useRecoilValue(filteredPersonData);
 
-    // set the dimensions and margins of the graph
-    var margin = {top: 100, right: 0, bottom: 0, left: 100},
-    width = 900 - margin.left - margin.right,
-    height = 900 - margin.top - margin.bottom;
+    // Set the dimensions and margins of the graph
+    let margin = {top: 100, right: 0, bottom: 0, left: 100},
+        width = 900 - margin.left - margin.right,
+        height = 900 - margin.top - margin.bottom,
+        strokeWidth = 5;
 
     // Center of spider plot circles
     let center = {x: width/2, y: height/2};
@@ -24,8 +25,9 @@ const SpiderPlot: React.FC<{}> = () => {
         else {
 
             // Linear range with values ranging from 0-5
+            let domainRange = {min: 0, max: 5};
             let scale = d3.scaleLinear()
-                .domain([0, 5])
+                .domain([domainRange.min, domainRange.max])
                 .range([0, 250]);
 
             // Tick values displayed along circle border
@@ -36,21 +38,23 @@ const SpiderPlot: React.FC<{}> = () => {
                 .attr('height', height)
                 .attr('class', 'spider-plot-svg')
 
+            // Add circles representing values 1-5
             ticks.forEach(tick => (
                 spiderPlotSvg.append("circle")
                     .attr("cx", center.x)
                     .attr("cy", center.y)
                     .attr("fill", "none")
                     .attr("stroke", "azure")
-                    .attr("stroke-width", 5)
+                    .attr("stroke-width", strokeWidth)
                     .attr("r", scale(tick))
             ));
 
+            // Label circles with tick values
             ticks.forEach(tick => (
                 spiderPlotSvg.append("text")
                     .attr("fill", "azure")
-                    .attr("x", center.x + 15)
-                    .attr("y", center.y - 10 - scale(tick))
+                    .attr("x", center.x + 3 * strokeWidth)
+                    .attr("y", center.y - 2 * strokeWidth - scale(tick))
                     .text(tick.toString())
             ));
 
@@ -62,19 +66,20 @@ const SpiderPlot: React.FC<{}> = () => {
                 return [center.x + x, center.y - y];
             }
 
-            let testLen = 7;
+            let testLen = 8;
 
             for(var i = 0; i < testLen; i++) {
                 let angle = (2*Math.PI * i / testLen) + (Math.PI / 2);
-                let [lineCoordX, lineCoordY] = angleToCoord(angle, 5);
+                let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
 
+                // Draw lines from center to edges of spider plot
                 spiderPlotSvg.append("line")
                     .attr("x1", center.x)
                     .attr("y1", center.y)
                     .attr("x2", lineCoordX)
                     .attr("y2", lineCoordY)
                     .attr("stroke", "azure")
-                    .attr("stroke-width", 5)
+                    .attr("stroke-width", strokeWidth)
             }
 
         }
