@@ -5,6 +5,10 @@ import { setOriginalNode } from "typescript";
 import availablePerson, {filteredPersonData} from "../../states/person-state";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { line } from "d3";
+import { lifestyle } from "../../types/types";
+
+// @TODO: Implement dynamic dates and attributes
+// https://www.d3-graph-gallery.com/graph/parallel_basic.html
 
 const ParallellAxisPlot: React.FC<{}> = () => {
 
@@ -13,9 +17,8 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     // Update axis depending on data, useD3 handles like useEffect
     const ref = useD3((div: any) => {
 
-
         if (data.length !== 0) {
-            // Draw the canvas
+            // Drawing the canvas
             const margin = {top: 50, right: 50, bottom: 50, left: 50}
             const width = 600 - margin.left - margin.right;
             const height =  600 - margin.top - margin.bottom;
@@ -23,9 +26,10 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
+            .attr("class", "p-axis-plot")
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-            let svg = d3.select("#plot");
+            let svg = d3.select(".p-axis-plot");
 
             const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
 
@@ -36,24 +40,17 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     attributes.push(attr[index]);
                 }
             });
-            // @TODO: Create and scale line data from chosen date.
-            // https://www.d3-graph-gallery.com/graph/parallel_basic.html
 
-            // Get min and max value of each attribute and create linear scales for each attribute
+            // Creating linear scales for each attribute
             const y:any = {}
-            for (var i = 1; i < attributes.length; i++) {
+            for (var i = 0; i < attributes.length; i++) {
                 const name = attributes[i]; // Getting names of attributes
-                const min:any = data[0].lifestyle.reduce(function (prev: any, curr: any) {
-                    return prev[name] < curr[name] ? prev : curr;
-                });
-                const max:any = data[0].lifestyle.reduce(function (prev: any, curr: any) {
-                    return prev[name] > curr[name] ? prev : curr;
-                });
+                // Create linear scale for min/max values of each attribute
                 y[name] = d3.scaleLinear()
-                .domain([min, max])
+                //@ts-ignore
+                .domain(d3.extent(data[0].lifestyle, function(d) {return +d[name];}))
                 .range([height, 0])
             }
-
 
             // Place axis for each attribute
             const x = d3.scalePoint()
@@ -61,33 +58,29 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             .padding(1)
             .domain(attributes)
 
-            // Create data for drawing lines
-            type lineData = [number, number][];
-            const lineInfo:lineData = [];
-            attributes.map(function(a) {
-                lineInfo.push([
-                    x(a) as number,
-                    y[a as keyof Object](data[0].lifestyle[0][a as keyof Object] as unknown as number) // Hehe
-                ]);
-            });
+            // Path drawing function which creates the lines between all attributes. Takes in lifestyle object(s) and returns a d3 line.
+            //@ts-ignore
+            function path(d:any) {
+                //@ts-ignore
+                return d3.line()(attributes.map(function(p:any) { return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
+            }
 
-            console.log(lineInfo[0]);   
-
+            // Filter data to only include one day
+            let res = data[0].lifestyle.filter(obj => {
+                return obj.date === "2019-11-06"
+              })
+            
             // Draw lines
-            svg.append("path")
-                .datum(lineInfo)
-                .attr("stroke", "white")
-                .attr("stroke-width", 10)
-                .attr('fill', 'none')
-                .attr("d", d3.line() 
-                .x(function(d) {return d[0]})
-                .y(function(d) {return d[1]})
-                );
-
+            svg
+            .selectAll("myPath")
+            //@ts-ignore
+            .data(res)
+            .enter().append("path")
+            .attr("d", path)
+            .style("fill", "none")
+            .style("stroke", "white");
         }
     }, [data] )
-
-
 
     return (
         <div id = {"plot"} ref = {ref}>
