@@ -6,6 +6,8 @@ import availablePerson, {filteredPersonData} from "../../states/person-state";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { line } from "d3";
 import { lifestyle } from "../../types/types";
+import { appendFileSync } from "fs";
+import '../../styles/components/parallell-axis.scss';
 
 // @TODO: Implement dynamic dates and attributes
 // https://www.d3-graph-gallery.com/graph/parallel_basic.html
@@ -19,7 +21,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
         if (data.length !== 0) {
             // Drawing the canvas
-            const margin = {top: 50, right: 50, bottom: 50, left: 50}
+            const margin = {top: 200, right: 50, bottom: 50, left: 50}
             const width = 600 - margin.left - margin.right;
             const height =  600 - margin.top - margin.bottom;
             d3.select("#plot")
@@ -27,6 +29,10 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .attr("class", "p-axis-plot")
+            .append("rect")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("fill", "white")
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
             let svg = d3.select(".p-axis-plot");
@@ -78,7 +84,23 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             .enter().append("path")
             .attr("d", path)
             .style("fill", "none")
-            .style("stroke", "white");
+            .style("stroke", "blue")
+            .attr("transform", "translate(" + 0 + "," + margin.top + ")");
+
+            // Draw axis
+            svg
+            .selectAll("myAxis")
+            .data(attributes).enter()
+            .append("g")
+            .attr("transform", function(d) { return "translate(" + x(d) + "," + margin.top + ")"; }) // Transalate axis to right position
+            //@ts-ignore
+            .each(function(d) { d3.select(this).call(d3.axisLeft().scale(y[d])); }) 
+            .append("text")
+            .style("text-anchor", "middle")
+            .attr("y", -9)
+            .text(function(d) { return d; })
+            .style("fill", "black");
+
         }
     }, [data] )
 
