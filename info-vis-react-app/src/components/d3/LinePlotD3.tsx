@@ -14,21 +14,27 @@ const LinePlotD3: React.FC<{}> = () => {
     const ref = useD3((div: any) => {
         if(personData.length === 0) return;
 
+        // Grab the div width and height
+        const div_size: number[] = [div._groups[0][0].clientWidth, div._groups[0][0].clientHeight]
+        const margin = {
+            top: 20,
+            right: 10,
+            bottom: 20,
+            left: 25
+        };
+
         // set the dimensions and margins of the graph
-        var margin = {top: 0, right: 0, bottom: 0, left: 0},
-            width = 900 - margin.left - margin.right,
-            height = 600 - margin.top - margin.bottom;
+        const width = (div_size[0] * 0.8);
+        const height = (div_size[1] * 0.4);
 
         // If we haven't added the svg before
         let previous_svg: any = document.getElementsByClassName('line-plot-svg');
         if(previous_svg.length === 0){
-            d3.select('#my_dataviz')
+            d3.select('.my_dataviz')
                 .append('svg')
                     .attr('width', width)
                     .attr('height', height)
                     .attr('class', 'line-plot-svg')
-                .append('g')
-                    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
         }
 
         // Get the svg
@@ -48,21 +54,28 @@ const LinePlotD3: React.FC<{}> = () => {
         let x = d3.scaleTime()
             // @ts-ignore
             .domain(d3.extent(dates))
-            .range([0, width]);
+            .range([margin.left, width - margin.right]);
+        let xAxis = d3.axisBottom(x);
+        
         // Add the x-scale to DOM
         svg.append("g")
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x));
+            .attr('class', 'axis-x')
+            .attr('transform', `translate(0, ${height - margin.bottom})`)
+            .call(xAxis);
 
         // We extract maxY for code-reading reasons!
         let maxY = d3.max(data, function(d) {return d.sleep_duration_h});
         // Create the y-scale
         let y = d3.scaleLinear()
             .domain([0, maxY!])
-            .range([height, 0])
+            .range([height - margin.top, margin.bottom])
+        let yAxis = d3.axisLeft(y);
+
         // Add the y-scale to the DOM
         svg.append("g")
-            .call(d3.axisLeft(y));
+            .attr('class', 'axis-y')
+            .attr('transform', `translate(${margin.left}, 0)`)
+            .call(yAxis)
 
         // Now add all our lines from the data
         svg.append('path')
@@ -84,12 +97,12 @@ const LinePlotD3: React.FC<{}> = () => {
                 .attr('stroke', 'none')
                 .attr('cx', (d) => x(timeParser(d.date)!))
                 .attr('cy', (d) => y(d.sleep_duration_h))
-                .attr('r', 2)
+                .attr('r', 2);
 
     }, [personData]);
 
     return (
-        <div ref={ref} id={'my_dataviz'}>
+        <div ref={ref} className={'my_dataviz'}>
             
 		</div>
     );

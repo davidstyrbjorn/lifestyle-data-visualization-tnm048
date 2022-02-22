@@ -1,2 +1,17 @@
-@use '../shared.scss'
+@use '../shared.scss';
 
+.my_dataviz {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.axis-y text {
+    font-size: 12px;
+}
+
+.axis-x text {
+    font-size: 10px;
+}
