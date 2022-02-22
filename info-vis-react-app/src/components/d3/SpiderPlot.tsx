@@ -10,6 +10,7 @@ import '../../styles/components/line-plot.scss';
 const SpiderPlot: React.FC<{}> = () => {
     // Grab the person data
     const personData = useRecoilValue(filteredPersonData);
+    const data = useRecoilValue(filteredPersonData);
 
     // Set the dimensions and margins of the graph
     let margin = {top: 100, right: 0, bottom: 0, left: 100},
@@ -66,11 +67,40 @@ const SpiderPlot: React.FC<{}> = () => {
                 return [center.x + x, center.y - y];
             }
 
-            let testLen = 8;
+            // Filter data to only include one day 2019-11-06
+            let res = data[0].lifestyle.filter(obj => {
+                return obj.date === "2019-11-06"
+            })
 
-            for(var i = 0; i < testLen; i++) {
-                let angle = (2*Math.PI * i / testLen) + (Math.PI / 2);
+            const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
+            console.log(attr);
+
+            // Temporarily, only use attributes in range 1-5
+            const allowedAttribs = ['fatigue', 'mood', 'readiness', 'sleep_quality']
+            const attributes:string[] = []; 
+            attr.forEach(function (item, index) {
+                if (allowedAttribs.includes(item)) {
+                    //console.log("CONTAINS " + item);
+                    attributes.push(attr[index]);
+                }
+            });
+
+            // Numbers between 1-5
+            //fatigue: number;
+            //mood: number;
+            //readiness: number;
+            //sleep_quality: number;
+            //let testLen = 4;
+
+            let length = attributes.length;
+            attributes.forEach(function (item, index) {
+                let angle = (2*Math.PI * index / length) + (Math.PI / 2);
+
                 let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
+                let [textX, textY] = angleToCoord(angle, domainRange.max + 1);
+
+                let attributeName = item;
+                console.log(item);
 
                 // Draw lines from center to edges of spider plot
                 spiderPlotSvg.append("line")
@@ -79,9 +109,27 @@ const SpiderPlot: React.FC<{}> = () => {
                     .attr("x2", lineCoordX)
                     .attr("y2", lineCoordY)
                     .attr("stroke", "azure")
-                    .attr("stroke-width", strokeWidth)
-            }
+                    .attr("stroke-width", strokeWidth);
 
+                spiderPlotSvg.append("text")
+                    .attr("text-align", "center")
+                    .attr("x", textX)
+                    .attr("y", textY)
+                    .attr("fill", "azure")
+                    .text(attributeName);
+
+                // No work?
+                // Now add all our dots
+                spiderPlotSvg.selectAll('myCircles')
+                    .data(res)
+                    .enter()
+                    .append('circle')
+                        .attr('fill', 'red')
+                        .attr('stroke', 'none')
+                        .attr('cx', (d) => angleToCoord(angle, d.sleep_quality)[0])
+                        .attr('cy', (d) => angleToCoord(angle, d.sleep_quality)[1])
+                        .attr('r', 15)
+            });
         }
 
     }, [personData]);
