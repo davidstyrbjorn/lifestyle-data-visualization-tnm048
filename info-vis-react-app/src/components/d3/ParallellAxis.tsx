@@ -7,7 +7,7 @@ import '../../styles/components/parallell-axis.scss';
 import { attributeState } from "../../states/attribute-state";
 import { lifestyle } from "../../types/types";
 
-// @TODO: Implement dynamic dates and attributes
+// @TODO: Bug at 5 persons
 // https://www.d3-graph-gallery.com/graph/parallel_basic.html
 
 const ParallellAxisPlot: React.FC<{}> = () => {
@@ -21,8 +21,9 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     const ref = useD3((div: any) => {
 
         if (data.length !== 0) {
+
             // Get selected attributes from attribute state
-            const selectedAttributes: any[] = []; 
+            const selectedAttributes: string[] = []; 
             attributeData.availableAttributes.map(function(val, idx) {
                 if (attributeData.selectedAttributes.includes(idx)) {
                     selectedAttributes.push(val);
@@ -51,30 +52,57 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             let svg = d3.select(".p-axis-plot");
             svg.selectAll("*").remove(); // Clear previous plot on redraw
 
-
             // Place axis for each attribute
             const x = d3.scalePoint()
             .range([0, width])
             .padding(1)
             .domain(selectedAttributes)
 
-            const selectedAttributesMax:number[] = []
-            
-            data.map(function(person, idx){
-                // Creating linear scales for each attribute
-                const y:any = {}
-                for (var i = 0; i < selectedAttributes.length; i++) {
-                    const name= selectedAttributes[i]; // Getting names of attributes
-                    // Create linear scale for min/max values of each attribute
-                    //@ts-ignore
-                    const maxY = d3.max(person.lifestyle, function(d) {return d[name];})
-                    y[name] = d3.scaleLinear()
-                    //@ts-ignore
-                    .domain(d3.extent(person.lifestyle, function(d) {return +d[name];}))
-                    .range([height, 0])
-                }
+			// Variables for linear scale, used in draw mapping as well
+			const y:Record<string,d3.ScaleLinear<number, number, never>> = {}
+			const selectedAttributesMax:number[] = [];
+			const selectedAttributesMin:number[] = [];
+			let maxY;
+			let minY; 
 
-                // Path drawing function which creates the lines between all attributes. Takes in lifestyle object(s) and returns a d3 line.
+			// Create linear scale with biggest span among all persons
+            data.map(function(person, idx){
+
+                for (let i = 0; i < selectedAttributes.length; i++) {
+                    const name = selectedAttributes[i]; // Getting names of attributes
+                    // Create linear scale for min/max values of each attribute
+					
+                    maxY =  Math.max.apply(Math, person.lifestyle.map(function(o) {
+						return (o as any)[name];
+					}));
+					
+					minY =  Math.min.apply(Math, person.lifestyle.map(function(o) {
+						return (o as any)[name];
+					}));
+
+                    if (selectedAttributesMax.length < i + 1) { // First entry
+						selectedAttributesMax[i] = maxY;
+                    } else if (maxY > selectedAttributesMax[i]) {
+                        selectedAttributesMax[i] = maxY;
+                    }
+
+					if (selectedAttributesMin.length < i + 1) { // First entry
+						selectedAttributesMin[i] = minY;
+                    } else if (minY < selectedAttributesMax[i]) {
+                        selectedAttributesMin[i] = minY;
+                    }
+                     
+					y[name] = d3.scaleLinear() // dont do on every person
+					//@ts-ignore
+					.domain([selectedAttributesMin[i], selectedAttributesMax[i]])
+					.range([height, 0])
+
+                }
+            });
+
+			// Draw lines for each person
+			data.map(function(person, idx){
+				// Path drawing function which creates the lines between all attributes. Takes in lifestyle object(s) and returns a d3 line.
                 //@ts-ignore
                 function path(d:any) {
                     //@ts-ignore
@@ -88,14 +116,17 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     }
 
                 })
+				
+				// Remove lines with old scales
+				svg.selectAll(".line" + idx).remove();
                 
-                // Draw lines
+                // Draw new lines
                 svg
                 .selectAll("myPath")
                 //@ts-ignore
                 .data(res)
                 .enter().append("path")
-                .attr("d", path)
+                .attr("d", path).attr("class", "line" + idx)
                 .style("fill", "none")
                 .style("stroke", colors[idx])
                 .attr("transform", "translate(" + 0 + "," + margin.top + ")");
@@ -107,7 +138,6 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .selectAll("myAxis")
                 .data(selectedAttributes).enter()
                 .append("g")
-                
                 .attr("transform", function(d) { return "translate(" + x(d) + "," + margin.top + ")"; }) // Transalate axis to right position
                 //@ts-ignore
                 .each(function(d) { d3.select(this).attr("class", "axis").call(d3.axisLeft().scale(y[d])); })
@@ -118,7 +148,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .attr("y", -9)
                 .text(function(d) { return d; })
                 .style("fill", "white");
-            });
+			});
         }
     }, [data, attributeData] ) // Update plot depending on person, attributes (TODO: on date)
 
