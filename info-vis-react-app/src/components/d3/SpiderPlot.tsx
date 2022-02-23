@@ -93,6 +93,18 @@ const SpiderPlot: React.FC<{}> = () => {
             //let testLen = 4;
 
             let length = attributes.length;
+
+            const getPathForData = (d: any): [number,number][] => {
+                // List of coordinate pairs
+                const coordinates:[number,number][] = [];
+                attributes.forEach(function (item, index) {
+                    let angle = (2*Math.PI * index / length) + (Math.PI / 2);
+                    coordinates.push(angleToCoord(angle, d[item]));
+                });
+                
+                return coordinates;
+            }
+
             attributes.forEach(function (item, index) {
                 let angle = (2*Math.PI * index / length) + (Math.PI / 2);
 
@@ -126,14 +138,27 @@ const SpiderPlot: React.FC<{}> = () => {
                     .append('circle')
                         .attr('fill', 'red')
                         .attr('stroke', 'none')
-                        .attr('cx', (d) => angleToCoord(angle, d.sleep_quality)[0])
-                        .attr('cy', (d) => angleToCoord(angle, d.sleep_quality)[1])
+                        .attr('cx', (d) => {
+                            //let test = res.find();
+                            if(item === "sleep_quality")
+                                return angleToCoord(angle, d.sleep_quality)[0];
+                            else
+                                return angleToCoord(angle, d.readiness)[0];
+                        })
+                        .attr('cy', (d) => {
+                            //let test = res.find();
+                            if(item === "sleep_quality")
+                                return angleToCoord(angle, d.sleep_quality)[1];
+                            else
+                                return angleToCoord(angle, d.readiness)[1];
+                        })
                         .attr('r', 15)
             });
         }
 
     }, [personData]);
 
+    //.attr('cx', (d) => angleToCoord(angle, d.sleep_quality)[0])
 
     return(
         <div ref={ref} id={'spider_viz'}></div>
