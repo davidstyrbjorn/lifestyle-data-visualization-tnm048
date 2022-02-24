@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import React, { useState } from "react";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import useD3 from "../../hooks/useD3";
 import { filteredPersonData } from "../../states/person-state";
 import '../../styles/components/parallell-axis.scss';
@@ -14,6 +14,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
     const data = useRecoilValue(filteredPersonData);
     const attributeData = useRecoilValue(attributeState);
+    
     const [missingData, setMissingData] = useState<number[]>([]);
 
     const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"];
@@ -66,6 +67,9 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 			let minY; 
             let personDates:string[] = [];
 
+            const missingData_n = missingData.splice(0, missingData.length);
+            setMissingData(missingData_n);
+
 			// Create linear scale with biggest span among all persons
             data.map(function(person, pidx){
                 if (personDates.length === 0) {
@@ -112,9 +116,9 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 }
             });
 
-            const missingData_n = missingData.splice(0, missingData.length);
-            setMissingData(missingData_n);
-            console.log(missingData);
+
+
+
 
 			// Draw lines for each person
 			data.map(function(person, idx){
@@ -138,9 +142,13 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 })
 
                 if (noData) {
-                    console.log("result no exist");
-                    setMissingData([...missingData, idx]);
+                    console.log("Missing person");
+                    const missingData_n = missingData;
+                    missingData_n.push(idx)
+                    setMissingData(missingData_n);
                 }
+
+                setMissingData(missingData => (missingData));
 
 				// Remove lines with old scales
 				svg.selectAll(".line" + idx).remove();
@@ -174,7 +182,9 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .text(function(d) { return d; })
                 .style("fill", "white");
 			});
+
         }
+
     }, [data, attributeData] ) // Update plot depending on person, attributes (TODO: on date)
 
 type Props = {
@@ -182,22 +192,21 @@ type Props = {
 }
 
 const MissingDataDisplay: React.FC<Props> = ({missingData}) => {
-    if (document.getElementById("MissingPersons") !== null) {
+    /*if (document.getElementById("MissingPersons") !== null) {
         let mData = document.getElementById("MissingPersons");
         //@ts-ignore
         mData.innerHTML = "";
-    }
+    }*/
 
-        
-
+ 
     return (
         <div className="MissingData">
 
                 <div id="MissingPersons"> 
+                {console.log(missingData)}
                 <ol>
-                    {console.log(missingData)}
                     {
-                        missingData.map((v: number) => <p>{v}</p>)
+                        missingData.map((v: number) => <p key={v}>{v}</p>)
                     }
                 </ol>
                 </div>
@@ -209,11 +218,14 @@ const MissingDataDisplay: React.FC<Props> = ({missingData}) => {
         </div>
     );
 }
-    console.log(missingData);
+
+
+
     return (
         <div>
         <div id = {"plot"} ref = {ref}>
         </div>
+
         <MissingDataDisplay missingData={missingData}/>
         </div>
 
