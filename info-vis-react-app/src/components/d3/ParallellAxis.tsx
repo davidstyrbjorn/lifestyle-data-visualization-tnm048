@@ -112,6 +112,10 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 }
             });
 
+            const missingData_n = missingData.splice(0, missingData.length);
+            setMissingData(missingData_n);
+            console.log(missingData);
+
 			// Draw lines for each person
 			data.map(function(person, idx){
 				// Path drawing function which creates the lines between all attributes. Takes in lifestyle object(s) and returns a d3 line.
@@ -121,20 +125,22 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     return d3.line()(selectedAttributes.map(function(p:any) { return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
                 }
 
-                setMissingData([]); //Reset missing data information
-                
+
+
+                let noData = true;
                 // Filter data to only include one day
                 let res = person.lifestyle.filter(function(obj, oidx) {
                     if (obj.date === personDates[0]) {
+                        noData = false;
                         return obj;
-                    }
-                    else {
-                        setMissingData([...missingData, idx]);
                     }
 
                 })
-				
-                console.log(missingData);
+
+                if (noData) {
+                    console.log("result no exist");
+                    setMissingData([...missingData, idx]);
+                }
 
 				// Remove lines with old scales
 				svg.selectAll(".line" + idx).remove();
@@ -171,19 +177,46 @@ const ParallellAxisPlot: React.FC<{}> = () => {
         }
     }, [data, attributeData] ) // Update plot depending on person, attributes (TODO: on date)
 
+type Props = {
+    missingData:number[]
+}
+
+const MissingDataDisplay: React.FC<Props> = ({missingData}) => {
+    if (document.getElementById("MissingPersons") !== null) {
+        let mData = document.getElementById("MissingPersons");
+        //@ts-ignore
+        mData.innerHTML = "";
+    }
+
+        
+
     return (
-        <div id = {"plot"} ref = {ref}>
-            <div className="MissingData">
-                {
-                    missingData.map(function(o) {
-                        <p>Person {o} </p>
-                    })
-                }
+        <div className="MissingData">
+
+                <div id="MissingPersons"> 
+                <ol>
+                    {console.log(missingData)}
+                    {
+                        missingData.map((v: number) => <p>{v}</p>)
+                    }
+                </ol>
+                </div>
+
+                
                 <p>
                     is missing data at this date
                 </p>
-            </div>
         </div>
+    );
+}
+    console.log(missingData);
+    return (
+        <div>
+        <div id = {"plot"} ref = {ref}>
+        </div>
+        <MissingDataDisplay missingData={missingData}/>
+        </div>
+
     );
 } 
 
