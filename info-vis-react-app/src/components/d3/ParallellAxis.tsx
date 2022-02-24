@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import React from "react";
+import React, { useState } from "react";
 import { useRecoilValue } from "recoil";
 import useD3 from "../../hooks/useD3";
 import { filteredPersonData } from "../../states/person-state";
@@ -14,6 +14,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
     const data = useRecoilValue(filteredPersonData);
     const attributeData = useRecoilValue(attributeState);
+    const [missingData, setMissingData] = useState<number[]>([]);
 
     const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"];
 
@@ -30,7 +31,6 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 }
             }); 
 
-            console.log(selectedAttributes);
             // Drawing the canvas
             const margin = {top: 200, right: 50, bottom: 50, left: 50}
             const width = 600 - margin.left - margin.right;
@@ -64,9 +64,21 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 			const selectedAttributesMin:number[] = [];
 			let maxY;
 			let minY; 
+            let personDates:string[] = [];
 
 			// Create linear scale with biggest span among all persons
-            data.map(function(person, idx){
+            data.map(function(person, pidx){
+                if (personDates.length === 0) {
+                    person.lifestyle.map(function(o) {
+                        personDates.push(o.date);
+                    });
+                }
+                else if (person.lifestyle.length > personDates.length) {
+                    personDates = [];
+                    person.lifestyle.map(function(o) {
+                        personDates.push(o.date);
+                    });
+                }
 
                 for (let i = 0; i < selectedAttributes.length; i++) {
                     const name = selectedAttributes[i]; // Getting names of attributes
@@ -88,7 +100,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
 					if (selectedAttributesMin.length < i + 1) { // First entry
 						selectedAttributesMin[i] = minY;
-                    } else if (minY < selectedAttributesMax[i]) {
+                    } else if (minY < selectedAttributesMin[i]) {
                         selectedAttributesMin[i] = minY;
                     }
                      
@@ -109,14 +121,21 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     return d3.line()(selectedAttributes.map(function(p:any) { return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
                 }
 
+                setMissingData([]); //Reset missing data information
+                
                 // Filter data to only include one day
-                let res = person.lifestyle.filter(function(obj, idx) {
-                    if (idx == 0) {
-                        return obj.date;
+                let res = person.lifestyle.filter(function(obj, oidx) {
+                    if (obj.date === personDates[0]) {
+                        return obj;
+                    }
+                    else {
+                        setMissingData([...missingData, idx]);
                     }
 
                 })
 				
+                console.log(missingData);
+
 				// Remove lines with old scales
 				svg.selectAll(".line" + idx).remove();
                 
@@ -154,7 +173,16 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
     return (
         <div id = {"plot"} ref = {ref}>
-            Test
+            <div className="MissingData">
+                {
+                    missingData.map(function(o) {
+                        <p>Person {o} </p>
+                    })
+                }
+                <p>
+                    is missing data at this date
+                </p>
+            </div>
         </div>
     );
 } 
