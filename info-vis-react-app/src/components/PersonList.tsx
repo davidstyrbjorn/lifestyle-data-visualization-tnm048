@@ -3,6 +3,8 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import availablePerson, { filteredPersonData, loadedPersonData } from "../states/person-state";
 import { PersonCheckbox } from "./PersonCheckbox";
 
+import '../styles/components/sidebar.scss';
+
 export const PersonList: React.FC<{}> = () => {
     return(
         <div id='personList'>

@@ -5,6 +5,8 @@ import attributeState from "../states/attribute-state";
 import { attribute_options } from "../types/types";
 import { makeAttributePresentable } from "../util/attribute-util";
 
+import '../styles/components/sidebar.scss';
+
 const AttributeList: React.FC<{}> = () => {
     // Grab the attribute state
     const [attribute, setAttribute] = useRecoilState(attributeState);
@@ -29,6 +31,7 @@ const AttributeList: React.FC<{}> = () => {
 
     return (
     <div>
+        <h2 className="title">Select attribute/s</h2>
         <ul>
             {attribute.availableAttributes.map((val: attribute_options, idx: number) => {
                 return (
@@ -42,19 +45,6 @@ const AttributeList: React.FC<{}> = () => {
                     </div> 
                 )
             })}
-        </ul>
-        
-        Chosen attributes:
-        <ul>
-            {
-                // Just to check the selection works
-                attribute.selectedAttributes.map((val: number, idx: number) => {
-                    return (
-                        <div className = "checkbox" key={idx}>
-                            {attribute.availableAttributes[val]}
-                        </div>
-                    )
-                })}
         </ul>
     </div>
     );
