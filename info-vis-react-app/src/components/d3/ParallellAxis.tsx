@@ -1,11 +1,13 @@
 import * as d3 from "d3";
 import React, { useState } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import useD3 from "../../hooks/useD3";
 import { filteredPersonData } from "../../states/person-state";
 import '../../styles/components/parallell-axis.scss';
 import { attributeState } from "../../states/attribute-state";
 import { lifestyle } from "../../types/types";
+import { missingDataState } from "../../states/missing-data-state";
+import { missingDataType } from "../../states/missing-data-state";
 
 // @TODO: Bug at 5 persons
 // https://www.d3-graph-gallery.com/graph/parallel_basic.html
@@ -15,7 +17,8 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     const data = useRecoilValue(filteredPersonData);
     const attributeData = useRecoilValue(attributeState);
     
-    const [missingData, setMissingData] = useState<number[]>([]);
+    const [missingData, setMissingData] = useRecoilState<missingDataType>(missingData)
+
 
     const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"];
 
@@ -67,8 +70,8 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 			let minY; 
             let personDates:string[] = [];
 
-            const missingData_n = missingData.splice(0, missingData.length);
-            setMissingData(missingData_n);
+            
+            setMissingData(n);
 
 			// Create linear scale with biggest span among all persons
             data.map(function(person, pidx){
