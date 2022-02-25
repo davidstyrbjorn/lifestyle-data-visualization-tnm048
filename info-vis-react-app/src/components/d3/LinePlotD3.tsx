@@ -7,10 +7,13 @@ import useD3 from '../../hooks/useD3';
 import attributeState from '../../states/attribute-state';
 import { filteredPersonData } from '../../states/person-state';
 import '../../styles/components/line-plot.scss';
-import { lifestyle } from '../../types/types';
+import { lifestyle, person_data } from '../../types/types';
 import getProperty from '../../util/get-property';
 
 const MIN_SLIDER_DIST = 0.05;
+const AVAILABLE_COLORS = [
+    '#f08e8e', '#76e953', '#53e1e9', '#5362e9', '#8f53e9', '#e953dc', '#e95353'
+];
 
 const LinePlotD3: React.FC<{}> = () => {
     // Grab the person data
@@ -29,7 +32,7 @@ const LinePlotD3: React.FC<{}> = () => {
     }
 
     const ref = useD3((div: any) => {
-        if(personData.length === 0) return;
+        if(personData.length <= 0) return;
         if(attributeData.selectedAttributes.length === 0) return;
 
         // Grab the div width and height
@@ -60,40 +63,77 @@ const LinePlotD3: React.FC<{}> = () => {
         
         // Grab the selected attribute variable
         const attributeString = attributeData.availableAttributes[attributeData.selectedAttributes[0]] as keyof lifestyle;
+        let date_strings: string[] = []; // save as string since it easier to compare (they all share same format)
+        
+        let personDataCopy = [...personData];
+        // Grab the personData with the most entries!
+        personDataCopy.sort((a, b) => a.lifestyle.length < b.lifestyle.length ? 1 : -1)
+            .at(0)!
+            .lifestyle.forEach((e, idx) => {
+                date_strings.push(e.date);
+            });
 
-        // 2019-11-17
+        let maxY = d3.max(personDataCopy.at(0)!.lifestyle, 
+            (d) => getProperty(d, attributeString) as number)!;
+        let minY = 0;
+
+        // create a time parser
         let timeParser = d3.timeParse("%Y-%m-%d");
-        // TODO: WHat about multipile people?
-        let testPerson = personData.at(0)!;
-        let data: Array<lifestyle> = testPerson.lifestyle;
-        let dates: Date[] = [];
-        const avgData: number[] = [];
-        for (let i = 0; i < data.length; i++){
-            let relative = i/data.length; // Get the relative index, a value from 0.0 to 1.0
-            if(relative >= sliderValue[0] && relative <= sliderValue[1]){
-                dates.push(timeParser(data[i].date)!);
-                avgData.push(getProperty(data[i], attributeString) as number);
-            }
+        
+        // Do a dates union of all available dates!
+        // Perform the union from all other selected persons!
+        // Also here we make sure to extract min of min and max of max for the attributeValu
+        for(let i = 1; i < personDataCopy.length; i++){
+            personDataCopy.at(i)!.lifestyle.forEach((e) => {
+                // Does the date not exist in the big list? Add it!
+                if(date_strings.findIndex((d) => d === e.date) === -1){
+                    date_strings.push(e.date);
+                }
+            });
+            // Perform min/max calculations
+            let localMaxY = d3.max(personDataCopy.at(i)!.lifestyle, 
+                (d) => getProperty(d, attributeString) as number)!;
+            maxY = localMaxY > maxY ? localMaxY : maxY;
         }
 
-        // Get average of the selected person
-        let avgY = d3.mean(avgData);
+        // Finally collect them and parse them into Date objects
+        let dates: Date[] = [];
+        date_strings.forEach((date_string, idx) => {
+            dates.push(timeParser(date_string)!);
+        });
+
+        dates = dates.sort((d1,d2) => d1 > d2 ? 1 : -1);
+        dates = dates.filter((_d, idx) => {
+            let relative = idx / dates.length;
+            return (relative >= sliderValue[0] && relative <= sliderValue[1])
+        });
+
+        // Loop through each person and find minimum and maximum date
+        // let data: Array<lifestyle> = testPerson.lifestyle;
+        // const avgData: number[] = [];
+        // for (let i = 0; i < data.length; i++){
+        //     let relative = i/data.length; // Get the relative index, a value from 0.0 to 1.0
+        //     if(relative >= sliderValue[0] && relative <= sliderValue[1]){
+        //         avgData.push(getProperty(data[i], attributeString) as number);
+        //     }
+        // }
 
         // Create the x-scale
+        const [d1, d2] = d3.extent(dates)!;
         let x = d3.scaleTime()
-            // @ts-ignore
-            .domain(d3.extent(dates))
+            .domain([d1!, d2!])
             .range([margin.left, width - margin.right]);
         let xAxis = d3.axisBottom(x);
-        
 
-        // We extract maxY for code-reading reasons! same with minY
-        let maxY = d3.max(data, function(d: lifestyle) {
-            return getProperty(d, attributeString) as number
-        });
-        let minY = d3.min(data, function(d: lifestyle) {
-            return getProperty(d, attributeString) as number;
-        });
+        // Get average of the selected person
+        // let avgY = d3.mean(avgData);
+
+        // Is minY zero? Yes for some cases
+        if(attributeString == 'fatigue' || attributeString == 'mood'
+            || attributeString == 'readiness' || attributeString == 'sleep_quality')
+        {
+            minY = 0;
+        }
         // Create the y-scale
         let y = d3.scaleLinear()
             .domain([minY!, maxY!])
@@ -122,61 +162,41 @@ const LinePlotD3: React.FC<{}> = () => {
             .attr('transform', `translate(${margin.left}, 0)`)
             .call(yAxis)
 
-        // + the average line
-        // extract min and max dates from dates array, used to get extents on the x-axis
-        const d1 = dates.reduce((d1, d2) => d1 < d2 ? d1 : d2);
-        const d2 = dates.reduce((d1, d2) => d1 > d2 ? d1 : d2);
-        svg.append('line')
-            .style('stroke', 'cyan')
-            .style('stroke-width', 3)
-            .attr('x1', x(d1))
-            .attr('y1', y(avgY!))
-            .attr('x2', x(d2))
-            .attr('y2', y(avgY!))
-            .on('mouseenter', (event: any) => {
-                const X = event.pageX; 
-                const Y = event.pageY - 120;
-                const content = `<p>The average value over the selected timespan: 
-                    ${parseFloat(avgY!.toString()).toFixed(2)}</p>`;
-                showTooltip(tooltip_div, content, X, Y);
-            })
-            .on('mouseleave', (_event: any) => {
-                tooltip_div.transition()		
-                    .duration(500)		
-                    .style("opacity", 0);	
-            });
-        
-        // Now add all our lines from the data
-        svg.append('path')
-            .datum(data)
-            .attr('fill', 'none')
-            .attr('stroke', 'steelblue')
-            .attr('stroke-width', 1.5)
-            .attr('d', d3.line<lifestyle>()
-                .x(function(d: lifestyle) {return (x(timeParser(d.date)!))})
-                .y(function(d: lifestyle) {return y(getProperty(d, attributeString) as number)})
-            );
-
         // Select the tooltip div
         let tooltip_div = d3.select('.tooltip')
             .style('opacity', 0);
 
-        // Now add all our dots
-        svg.selectAll('myCircles')
+        // Now add all our lines from the data
+        personData.forEach((p_data: person_data, idx: number) => {
+            const data = p_data.lifestyle;
+
+            svg.append('path')
+                .datum(data)
+                .attr('fill', 'none')
+                .attr('stroke', AVAILABLE_COLORS[idx])
+                .attr('stroke-width', 1.5)
+                .attr('d', d3.line<lifestyle>()
+                    .x(function(d: lifestyle) {return (x(timeParser(d.date)!))})
+                    .y(function(d: lifestyle) {return y(getProperty(d, attributeString) as number)})
+                    // .curve(d3.curveMonotoneX)
+            );
+
+            // Now add all our dots
+            svg.selectAll('myCircles')
             .data(data)
             .enter()
             .append('circle')
-                .attr('fill', 'red')
+                .attr('fill', AVAILABLE_COLORS[idx])
                 .attr('stroke', 'none')
                 .attr('cx', (d: lifestyle) => x(timeParser(d.date)!))
                 .attr('cy', (d: lifestyle) => y(getProperty(d, attributeString) as number))
                 .attr('r', 5)
                 // Add some tooltip interaction to the dots
                 .on('mouseover', (_event: any, d: lifestyle) => {
-                    const X = x(timeParser(d.date)!)+90;
-                    const Y = y(getProperty(d, attributeString) as number)-40;
-                    const content = `<p> ${attributeString} value: ${getProperty(d, attributeString)}</p><br/>
-                        <p>Date: ${d.date}</p>`;
+                        const X = x(timeParser(d.date)!)+90;
+                        const Y = y(getProperty(d, attributeString) as number)-40;
+                        const content = `<p> ${attributeString} value: ${getProperty(d, attributeString)}</p><br/>
+                            <p>Date: ${d.date}</p>`;
                     showTooltip(tooltip_div, content, X, Y);
                 })
                 .on('mouseout', (_d) => {
@@ -184,6 +204,32 @@ const LinePlotD3: React.FC<{}> = () => {
                         .duration(500)		
                         .style("opacity", 0);	
                 })
+        });
+            
+        // + the average line
+        // extract min and max dates from dates array, used to get extents on the x-axis
+        // const d1 = dates.reduce((d1, d2) => d1 < d2 ? d1 : d2);
+        // const d2 = dates.reduce((d1, d2) => d1 > d2 ? d1 : d2);
+        // svg.append('line')
+        //     .style('stroke', 'cyan')
+        //     .style('stroke-width', 3)
+        //     .attr('x1', x(d1))
+        //     .attr('y1', y(avgY!))
+        //     .attr('x2', x(d2))
+        //     .attr('y2', y(avgY!))
+        //     .on('mouseenter', (event: any) => {
+        //         const X = event.pageX; 
+        //         const Y = event.pageY - 120;
+        //         const content = `<p>The average value over the selected timespan: 
+        //             ${parseFloat(avgY!.toString()).toFixed(2)}</p>`;
+        //         showTooltip(tooltip_div, content, X, Y);
+        //     })
+        //     .on('mouseleave', (_event: any) => {
+        //         tooltip_div.transition()		
+        //             .duration(500)		
+        //             .style("opacity", 0);	
+        //     });        
+
     }, [personData, attributeData, sliderValue]);
 
     // TODO: This function does NOT do what i expect it to do with the limits
@@ -211,10 +257,9 @@ const LinePlotD3: React.FC<{}> = () => {
             .style('top', y + "px");
     }
 
-
-    if(personData.length !== 1 || attributeData.selectedAttributes.length !== 1){
-        return <div>
-            <p>Mad</p>
+    if(attributeData.selectedAttributes.length !== 1 || personData.length === 0){
+        return <div className='fallback-container'>
+            <h1 className="fallback-text">Please select ONE attribute and at least ONE person</h1>
         </div>
     }
     return (

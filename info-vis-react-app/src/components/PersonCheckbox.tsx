@@ -15,7 +15,7 @@ export const PersonCheckbox: React.FC<Props> = ( {name} ) => {
     const onCheckBoxChange = () => setSelected(prevState => !prevState);
 
     return(
-        <div>
+        <div className="checkbox">
             <FormControlLabel 
                 control={
                     <Checkbox checked={isSelected} onChange={() => onCheckBoxChange()} />
