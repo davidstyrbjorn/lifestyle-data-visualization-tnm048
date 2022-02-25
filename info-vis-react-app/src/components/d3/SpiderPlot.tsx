@@ -35,11 +35,20 @@ const SpiderPlot: React.FC<{}> = () => {
     }
 
     const ref = useD3((div: any) =>  {
-        if(personData.length === 0) {
+        // Clear plot and return if no person is selected
+        if(personData.length === 0 || !data[0]) {
             clearPlot();
             return;
         }
         else {
+            //TEMP: grab specific day
+            let res = data[0].lifestyle.filter(obj => {
+                return obj.date === "2019-11-06"
+            })
+            if(res.length < 1) {
+                return; // @TODO: Display error message if this happens
+            }
+            console.log(res);
 
             // Linear range with values ranging from 0-5
             let domainRange = {min: 0, max: 5};
@@ -89,12 +98,6 @@ const SpiderPlot: React.FC<{}> = () => {
                 let y = r * Math.sin(angle);
                 return [center.x + x, center.y - y];
             }
-
-            //TEMP: grab specific day
-            let res = data[0].lifestyle.filter(obj => {
-                return obj.date === "2019-11-06"
-            })
-            console.log(res);
 
             const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
 
@@ -179,6 +182,12 @@ const SpiderPlot: React.FC<{}> = () => {
 
     }, [personData]);
 
+    if(personData.length === 0 || !data[0] ) {
+        clearPlot();
+        return <div className='fallback-container'>
+            <h1 className="fallback-text">Could not display plot for this selection.</h1>
+        </div>
+    }
     return(
         <div ref={ref} id={'spider_viz'}></div>
     );
