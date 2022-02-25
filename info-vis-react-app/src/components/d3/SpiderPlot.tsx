@@ -1,5 +1,7 @@
 import * as d3 from 'd3';
-import React from 'react';
+import React, {useState} from 'react';
+import { Slider } from '@mui/material';
+import { Box } from '@mui/system';
 import { useRecoilValue } from 'recoil';
 import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
@@ -12,6 +14,7 @@ const SpiderPlot: React.FC<{}> = () => {
     // Grab the person data
     const personData = useRecoilValue(filteredPersonData);
     const data = useRecoilValue(filteredPersonData);
+    const [sliderValue, setSliderValue] = useState<number[]>([0.0, 1.0]);
 
     // Set the dimensions and margins of the graph
     let margin = {top: 100, right: 0, bottom: 0, left: 100},
@@ -48,7 +51,6 @@ const SpiderPlot: React.FC<{}> = () => {
             if(res.length < 1) {
                 return; // @TODO: Display error message if this happens
             }
-            console.log(res);
 
             // Linear range with values ranging from 0-5
             let domainRange = {min: 0, max: 5};
@@ -182,14 +184,33 @@ const SpiderPlot: React.FC<{}> = () => {
 
     }, [personData]);
 
-    if(personData.length === 0 || !data[0] ) {
+    if(personData.length < 1 || !data[0] ) {
         clearPlot();
         return <div className='fallback-container'>
-            <h1 className="fallback-text">Could not display plot for this selection.</h1>
+            <h1 className="fallback-text">Could not display plot for this selection</h1>
         </div>
     }
     return(
-        <div ref={ref} id={'spider_viz'}></div>
+        <div>
+            <div ref={ref} id={'spider_viz'}></div>
+            <div className={'slider-area'}>
+                <Box 
+                    margin={'auto'}
+                    width="50%"
+                >
+                    <p className='slider-title'>Range Slider</p>
+                    <Slider
+                        getAriaLabel={() => 'Date range slider'}
+                        value={sliderValue}
+                        min={0}
+                        step={0.1}
+                        max={1}
+                        valueLabelDisplay="auto"
+                        disableSwap
+                    />
+                </Box>
+            </div>
+        </div>
     );
 }
 
