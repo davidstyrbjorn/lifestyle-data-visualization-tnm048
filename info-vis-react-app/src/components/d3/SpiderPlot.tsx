@@ -5,6 +5,7 @@ import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
 
 import '../../styles/components/line-plot.scss';
+import { lifestyle } from '../../types/types';
 
 // With inspiration from this tutorial: https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
 const SpiderPlot: React.FC<{}> = () => {
@@ -17,6 +18,9 @@ const SpiderPlot: React.FC<{}> = () => {
         width = 900 - margin.left - margin.right,
         height = 900 - margin.top - margin.bottom,
         strokeWidth = 5;
+
+    // @TODO: Make this public?
+    const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"];
 
     // Center of spider plot circles
     let center = {x: width/2, y: height/2};
@@ -94,11 +98,12 @@ const SpiderPlot: React.FC<{}> = () => {
 
             let length = attributes.length;
 
-            const getPathForData = (d: any): [number,number][] => {
+            const getPathForData = (d: lifestyle): [number,number][] => {
                 // List of coordinate pairs
                 const coordinates:[number,number][] = [];
                 attributes.forEach(function (item, index) {
                     let angle = (2*Math.PI * index / length) + (Math.PI / 2);
+                    //@ts-ignore
                     coordinates.push(angleToCoord(angle, d[item]));
                 });
                 
@@ -130,29 +135,40 @@ const SpiderPlot: React.FC<{}> = () => {
                     .attr("fill", "azure")
                     .text(attributeName);
 
-                // No work?
-                // Now add all our dots
-                spiderPlotSvg.selectAll('myCircles')
+                spiderPlotSvg.selectAll('spiderPlotNodes')
                     .data(res)
                     .enter()
                     .append('circle')
                         .attr('fill', 'red')
                         .attr('stroke', 'none')
-                        .attr('cx', (d) => {
-                            //let test = res.find();
-                            if(item === "sleep_quality")
-                                return angleToCoord(angle, d.sleep_quality)[0];
-                            else
-                                return angleToCoord(angle, d.readiness)[0];
-                        })
-                        .attr('cy', (d) => {
-                            //let test = res.find();
-                            if(item === "sleep_quality")
-                                return angleToCoord(angle, d.sleep_quality)[1];
-                            else
-                                return angleToCoord(angle, d.readiness)[1];
-                        })
-                        .attr('r', 15)
+                        //@ts-ignore
+                        .attr('cx', (d) => angleToCoord(angle, d[item])[0])
+                        //@ts-ignore
+                        .attr('cy', (d) => angleToCoord(angle, d[item])[1])
+                        .attr('r', 15);
+
+                let line = d3.line()
+                    .x(d => d[0])
+                    .y(d => d[1]);
+
+                //let coordinates = getPathForData(data[0].lifestyle);
+                let currentData = data[0].lifestyle.filter(obj => {
+                    return obj.date === "2019-11-06"
+                })
+
+                console.log(currentData);
+
+                let coordinates = getPathForData(currentData[0]);
+                console.log(coordinates);
+                spiderPlotSvg.append("path")
+                    .datum(coordinates)
+                    .attr("d", line)
+                    .attr("stroke-width", strokeWidth)
+                    .attr("stroke", "azure")
+                    .attr("fill", "azure")
+
+
+
             });
         }
 
