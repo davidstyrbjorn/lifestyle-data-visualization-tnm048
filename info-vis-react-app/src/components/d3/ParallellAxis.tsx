@@ -1,113 +1,234 @@
-import React, { useEffect } from "react";
-import * as d3 from "d3"
-import useD3  from "../../hooks/useD3";
-import { setOriginalNode } from "typescript";
-import availablePerson, {filteredPersonData} from "../../states/person-state";
+import * as d3 from "d3";
+import React, { useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { line } from "d3";
-import { lifestyle } from "../../types/types";
-import { appendFileSync } from "fs";
+import useD3 from "../../hooks/useD3";
+import { filteredPersonData } from "../../states/person-state";
 import '../../styles/components/parallell-axis.scss';
+import { attributeState } from "../../states/attribute-state";
+import { lifestyle } from "../../types/types";
 
-// @TODO: Implement dynamic dates and attributes
+// @TODO: Bug at 5 persons
 // https://www.d3-graph-gallery.com/graph/parallel_basic.html
 
 const ParallellAxisPlot: React.FC<{}> = () => {
 
     const data = useRecoilValue(filteredPersonData);
+    const attributeData = useRecoilValue(attributeState);
+    
+    const [missingData, setMissingData] = useState<number[]>([]);
+
+    const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"];
 
     // Update axis depending on data, useD3 handles like useEffect
     const ref = useD3((div: any) => {
 
         if (data.length !== 0) {
+
+            // Get selected attributes from attribute state
+            const selectedAttributes: string[] = []; 
+            attributeData.availableAttributes.map(function(val, idx) {
+                if (attributeData.selectedAttributes.includes(idx)) {
+                    selectedAttributes.push(val);
+                }
+            }); 
+
             // Drawing the canvas
             const margin = {top: 200, right: 50, bottom: 50, left: 50}
             const width = 600 - margin.left - margin.right;
             const height =  600 - margin.top - margin.bottom;
-            d3.select("#plot")
-            .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .attr("class", "p-axis-plot")
-            .append("rect")
-            .attr("width", "100%")
-            .attr("height", "100%")
-            .attr("fill", "white")
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-            let svg = d3.select(".p-axis-plot");
 
-            const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
+            // Only draw background if no previous plot exists
+            let previous_svg: any = document.getElementsByClassName('p-axis-plot');
+            if (previous_svg.length === 0) {
+                d3.select("#plot")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .attr("class", "p-axis-plot")
 
-            // Removing date
-            const attributes:string[] = []; 
-            attr.forEach(function (item, index) {
-                if (index > 0) {
-                    attributes.push(attr[index]);
-                }
-            });
-
-            // Creating linear scales for each attribute
-            const y:any = {}
-            for (var i = 0; i < attributes.length; i++) {
-                const name = attributes[i]; // Getting names of attributes
-                // Create linear scale for min/max values of each attribute
-                y[name] = d3.scaleLinear()
-                //@ts-ignore
-                .domain(d3.extent(data[0].lifestyle, function(d) {return +d[name];}))
-                .range([height, 0])
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
             }
+
+            let svg = d3.select(".p-axis-plot");
+            svg.selectAll("*").remove(); // Clear previous plot on redraw
 
             // Place axis for each attribute
             const x = d3.scalePoint()
             .range([0, width])
             .padding(1)
-            .domain(attributes)
+            .domain(selectedAttributes)
 
-            // Path drawing function which creates the lines between all attributes. Takes in lifestyle object(s) and returns a d3 line.
-            //@ts-ignore
-            function path(d:any) {
+			// Variables for linear scale, used in draw mapping as well
+			const y:Record<string,d3.ScaleLinear<number, number, never>> = {}
+			const selectedAttributesMax:number[] = [];
+			const selectedAttributesMin:number[] = [];
+			let maxY;
+			let minY; 
+            let personDates:string[] = [];
+
+            const missingData_n = missingData.splice(0, missingData.length);
+            setMissingData(missingData_n);
+
+			// Create linear scale with biggest span among all persons
+            data.map(function(person, pidx){
+                if (personDates.length === 0) {
+                    person.lifestyle.map(function(o) {
+                        personDates.push(o.date);
+                    });
+                }
+                else if (person.lifestyle.length > personDates.length) {
+                    personDates = [];
+                    person.lifestyle.map(function(o) {
+                        personDates.push(o.date);
+                    });
+                }
+
+                for (let i = 0; i < selectedAttributes.length; i++) {
+                    const name = selectedAttributes[i]; // Getting names of attributes
+                    // Create linear scale for min/max values of each attribute
+					
+                    maxY =  Math.max.apply(Math, person.lifestyle.map(function(o) {
+						return (o as any)[name];
+					}));
+					
+					minY =  Math.min.apply(Math, person.lifestyle.map(function(o) {
+						return (o as any)[name];
+					}));
+
+                    if (selectedAttributesMax.length < i + 1) { // First entry
+						selectedAttributesMax[i] = maxY;
+                    } else if (maxY > selectedAttributesMax[i]) {
+                        selectedAttributesMax[i] = maxY;
+                    }
+
+					if (selectedAttributesMin.length < i + 1) { // First entry
+						selectedAttributesMin[i] = minY;
+                    } else if (minY < selectedAttributesMin[i]) {
+                        selectedAttributesMin[i] = minY;
+                    }
+                     
+					y[name] = d3.scaleLinear() // dont do on every person
+					//@ts-ignore
+					.domain([selectedAttributesMin[i], selectedAttributesMax[i]])
+					.range([height, 0])
+
+                }
+            });
+
+
+
+
+
+			// Draw lines for each person
+			data.map(function(person, idx){
+				// Path drawing function which creates the lines between all attributes. Takes in lifestyle object(s) and returns a d3 line.
                 //@ts-ignore
-                return d3.line()(attributes.map(function(p:any) { return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
-            }
+                function path(d:any) {
+                    //@ts-ignore
+                    return d3.line()(selectedAttributes.map(function(p:any) { return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
+                }
 
-            // Filter data to only include one day
-            let res = data[0].lifestyle.filter(obj => {
-                return obj.date === "2019-11-06"
-              })
-            
-            // Draw lines
-            svg
-            .selectAll("myPath")
-            //@ts-ignore
-            .data(res)
-            .enter().append("path")
-            .attr("d", path)
-            .style("fill", "none")
-            .style("stroke", "blue")
-            .attr("transform", "translate(" + 0 + "," + margin.top + ")");
 
-            // Draw axis
-            svg
-            .selectAll("myAxis")
-            .data(attributes).enter()
-            .append("g")
-            .attr("transform", function(d) { return "translate(" + x(d) + "," + margin.top + ")"; }) // Transalate axis to right position
-            //@ts-ignore
-            .each(function(d) { d3.select(this).call(d3.axisLeft().scale(y[d])); }) 
-            .append("text")
-            .style("text-anchor", "middle")
-            .attr("y", -9)
-            .text(function(d) { return d; })
-            .style("fill", "black");
+
+                let noData = true;
+                // Filter data to only include one day
+                let res = person.lifestyle.filter(function(obj, oidx) {
+                    if (obj.date === personDates[0]) {
+                        noData = false;
+                        return obj;
+                    }
+
+                })
+
+                if (noData) {
+                    console.log("Missing person");
+                    const missingData_n = missingData;
+                    missingData_n.push(idx)
+                    setMissingData(missingData_n);
+                }
+
+                setMissingData(missingData => (missingData));
+
+				// Remove lines with old scales
+				svg.selectAll(".line" + idx).remove();
+                
+                // Draw new lines
+                svg
+                .selectAll("myPath")
+                //@ts-ignore
+                .data(res)
+                .enter().append("path")
+                .attr("d", path).attr("class", "line" + idx)
+                .style("fill", "none")
+                .style("stroke", colors[idx])
+                .attr("transform", "translate(" + 0 + "," + margin.top + ")");
+                
+                svg.selectAll(".axis").remove();
+
+                // Draw axis
+                svg
+                .selectAll("myAxis")
+                .data(selectedAttributes).enter()
+                .append("g")
+                .attr("transform", function(d) { return "translate(" + x(d) + "," + margin.top + ")"; }) // Transalate axis to right position
+                //@ts-ignore
+                .each(function(d) { d3.select(this).attr("class", "axis").call(d3.axisLeft().scale(y[d])); })
+                .style("fill", "white") 
+                .append("text")
+                .style("text-anchor", "middle")
+                .style("fill", "white") 
+                .attr("y", -9)
+                .text(function(d) { return d; })
+                .style("fill", "white");
+			});
 
         }
-    }, [data] )
+
+    }, [data, attributeData] ) // Update plot depending on person, attributes (TODO: on date)
+
+type Props = {
+    missingData:number[]
+}
+
+const MissingDataDisplay: React.FC<Props> = ({missingData}) => {
+    /*if (document.getElementById("MissingPersons") !== null) {
+        let mData = document.getElementById("MissingPersons");
+        //@ts-ignore
+        mData.innerHTML = "";
+    }*/
+
+ 
+    return (
+        <div className="MissingData">
+
+                <div id="MissingPersons"> 
+                {console.log(missingData)}
+                <ol>
+                    {
+                        missingData.map((v: number) => <p key={v}>{v}</p>)
+                    }
+                </ol>
+                </div>
+
+                
+                <p>
+                    is missing data at this date
+                </p>
+        </div>
+    );
+}
+
+
 
     return (
+        <div>
         <div id = {"plot"} ref = {ref}>
-            Test
         </div>
+
+        <MissingDataDisplay missingData={missingData}/>
+        </div>
+
     );
 } 
 
