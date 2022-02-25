@@ -27,8 +27,18 @@ const SpiderPlot: React.FC<{}> = () => {
     // Center of spider plot circles
     let center = {x: width/2, y: height/2};
 
+    // Clear the spider plot svg
+    const clearPlot = () => {
+        d3.select('#spider_viz')
+        .selectAll("*")
+        .remove();
+    }
+
     const ref = useD3((div: any) =>  {
-        if(personData.length === 0) return;
+        if(personData.length === 0) {
+            clearPlot();
+            return;
+        }
         else {
 
             // Linear range with values ranging from 0-5
@@ -39,11 +49,18 @@ const SpiderPlot: React.FC<{}> = () => {
 
             // Tick values displayed along circle border
             let ticks = [1, 2, 3, 4, 5];
-            let spiderPlotSvg = d3.select('#spider_viz')
-            .append('svg')
-                .attr('width', width)
-                .attr('height', height)
-                .attr('class', 'spider-plot-svg')
+
+            // If we haven't added the svg before
+            let previous_svg: any = document.getElementsByClassName('spider-plot-svg');
+            if(previous_svg.length === 0) { 
+                d3.select('#spider_viz')
+                    .append('svg')
+                        .attr('width', width)
+                        .attr('height', height)
+                        .attr('class', 'spider-plot-svg')
+            }
+
+            let spiderPlotSvg = d3.select('.spider-plot-svg');
 
             // Add circles representing values 1-5
             ticks.forEach(tick => (
@@ -73,13 +90,13 @@ const SpiderPlot: React.FC<{}> = () => {
                 return [center.x + x, center.y - y];
             }
 
-            // Filter data to only include one day 2019-11-06
+            //TEMP: grab specific day
             let res = data[0].lifestyle.filter(obj => {
                 return obj.date === "2019-11-06"
             })
+            console.log(res);
 
             const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
-            console.log(attr);
 
             // Temporarily, only use attributes in range 1-5
             const allowedAttribs = ['fatigue', 'mood', 'readiness', 'sleep_quality']
@@ -91,8 +108,10 @@ const SpiderPlot: React.FC<{}> = () => {
                 }
             });
 
+            // Amount of attributes
             let length = attributes.length;
 
+            // Given a lifestyle, return list of coordinate pairs for the path
             const getPathForData = (d: lifestyle): [number,number][] => {
                 // List of coordinate pairs
                 const coordinates:[number,number][] = [];
@@ -101,7 +120,6 @@ const SpiderPlot: React.FC<{}> = () => {
                     //@ts-ignore
                     coordinates.push(angleToCoord(angle, d[item]));
                 });
-                
                 return coordinates;
             }
 
@@ -112,7 +130,6 @@ const SpiderPlot: React.FC<{}> = () => {
                 let [textX, textY] = angleToCoord(angle, domainRange.max + 1);
 
                 let attributeName = item;
-                console.log(item);
 
                 // Draw lines from center to edges of spider plot
                 spiderPlotSvg.append("line")
@@ -123,6 +140,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     .attr("stroke", "azure")
                     .attr("stroke-width", strokeWidth);
 
+                // Text fields marking the different attribute names
                 spiderPlotSvg.append("text")
                     .attr("text-align", "center")
                     .attr("x", textX)
@@ -130,6 +148,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     .attr("fill", "azure")
                     .text(attributeName);
 
+                // Draw nodes at path points.
                 spiderPlotSvg.selectAll('spiderPlotNodes')
                     .data(res)
                     .enter()
@@ -147,13 +166,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     .x(d => d[0])
                     .y(d => d[1]);
 
-                //let coordinates = getPathForData(data[0].lifestyle);
-                let currentData = data[0].lifestyle.filter(obj => {
-                    return obj.date === "2019-11-06"
-                })
-
-                let coordinates = getPathForData(currentData[0]);
-                console.log(coordinates);
+                let coordinates = getPathForData(res[0]);
                 spiderPlotSvg.append("path")
                     .datum(coordinates)
                     .attr("d", line)
