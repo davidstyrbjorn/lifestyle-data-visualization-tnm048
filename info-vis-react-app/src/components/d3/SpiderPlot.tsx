@@ -21,6 +21,8 @@ const SpiderPlot: React.FC<{}> = () => {
 
     // @TODO: Make this public?
     const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"];
+    const lightGreen = "#88A54B";
+    const darkGreen = "#607534";
 
     // Center of spider plot circles
     let center = {x: width/2, y: height/2};
@@ -89,13 +91,6 @@ const SpiderPlot: React.FC<{}> = () => {
                 }
             });
 
-            // Numbers between 1-5
-            //fatigue: number;
-            //mood: number;
-            //readiness: number;
-            //sleep_quality: number;
-            //let testLen = 4;
-
             let length = attributes.length;
 
             const getPathForData = (d: lifestyle): [number,number][] => {
@@ -139,13 +134,14 @@ const SpiderPlot: React.FC<{}> = () => {
                     .data(res)
                     .enter()
                     .append('circle')
-                        .attr('fill', 'red')
+                        .attr('fill', lightGreen)
                         .attr('stroke', 'none')
                         //@ts-ignore
                         .attr('cx', (d) => angleToCoord(angle, d[item])[0])
                         //@ts-ignore
                         .attr('cy', (d) => angleToCoord(angle, d[item])[1])
-                        .attr('r', 15);
+                        .attr('r', 15)
+                        .attr('z-index', 2);
 
                 let line = d3.line()
                     .x(d => d[0])
@@ -156,25 +152,19 @@ const SpiderPlot: React.FC<{}> = () => {
                     return obj.date === "2019-11-06"
                 })
 
-                console.log(currentData);
-
                 let coordinates = getPathForData(currentData[0]);
                 console.log(coordinates);
                 spiderPlotSvg.append("path")
                     .datum(coordinates)
                     .attr("d", line)
-                    .attr("stroke-width", strokeWidth)
-                    .attr("stroke", "azure")
-                    .attr("fill", "azure")
-
-
+                    .attr("fill", "white")
+                    .attr("stroke-opacity", 1)
+                    .attr("opacity", 0.1);
 
             });
         }
 
     }, [personData]);
-
-    //.attr('cx', (d) => angleToCoord(angle, d.sleep_quality)[0])
 
     return(
         <div ref={ref} id={'spider_viz'}></div>
