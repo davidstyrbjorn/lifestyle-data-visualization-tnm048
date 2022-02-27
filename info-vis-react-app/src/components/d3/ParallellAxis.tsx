@@ -7,25 +7,23 @@ import '../../styles/components/parallell-axis.scss';
 import { attributeState } from "../../states/attribute-state";
 import { lifestyle } from "../../types/types";
 
-// @TODO: Bug at 5 persons
-// https://www.d3-graph-gallery.com/graph/parallel_basic.html
-
-let showMissingData:boolean = false;
-
+let showMissingData:boolean = false; // To not render missingdata from undefined
 
 const ParallellAxisPlot: React.FC<{}> = () => {
-    const [missingData, setMissingData] = useState<number[]>([]);
-    const data = useRecoilValue(filteredPersonData);
-    const attributeData = useRecoilValue(attributeState);
 
-    const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"];
+    const [missingData, setMissingData] = useState<number[]>([]); // Persons who have data missing on the selected date
+    const data = useRecoilValue(filteredPersonData); // Person data
+    const attributeData = useRecoilValue(attributeState); // Attribute data
+
+    const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"]; // Color list 
 
     // Update axis depending on data, useD3 handles like useEffect
     const ref = useD3((div: any) => {
-
+        console.log("Main hook", missingData);
         if (data.length !== 0) {
 
             showMissingData = true;
+
             // Get selected attributes from attribute state
             const selectedAttributes: string[] = []; 
             attributeData.availableAttributes.map(function(val, idx) {
@@ -67,13 +65,12 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 			const selectedAttributesMin:number[] = [];
 			let maxY;
 			let minY; 
-            let personDates:string[] = [];
-
-
-            
+            let personDates:string[] = []; // List of selectable dates
 
 			// Create linear scale with biggest span among all persons
             data.map(function(person, pidx){
+
+                // Choosing the largest date span among all persons
                 if (personDates.length === 0) {
                     person.lifestyle.map(function(o) {
                         personDates.push(o.date);
@@ -88,8 +85,8 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
                 for (let i = 0; i < selectedAttributes.length; i++) {
                     const name = selectedAttributes[i]; // Getting names of attributes
+
                     // Create linear scale for min/max values of each attribute
-					
                     maxY =  Math.max.apply(Math, person.lifestyle.map(function(o) {
 						return (o as any)[name];
 					}));
@@ -110,8 +107,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                         selectedAttributesMin[i] = minY;
                     }
                      
-					y[name] = d3.scaleLinear() // dont do on every person
-					//@ts-ignore
+					y[name] = d3.scaleLinear()
 					.domain([selectedAttributesMin[i], selectedAttributesMax[i]])
 					.range([height, 0])
 
@@ -119,39 +115,41 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 
             });
 
-            setMissingData([]); // Does not work
 
+            let missingDataNew:number[] = []; // Helper variable to update missingData
 
 			// Draw lines for each person
 			data.map(function(person, idx){
 
-                
 				// Path drawing function which creates the lines between all attributes. Takes in lifestyle object(s) and returns a d3 line.
-                //@ts-ignore
                 function path(d:any) {
-                    //@ts-ignore
+                    // @ts-ignore
                     return d3.line()(selectedAttributes.map(function(p:any) { return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
                 }
-
+                
+                // To flag if person should show to have missing data for date
                 let noData = true;
-                person.lifestyle.map(function(o) {
+                person.lifestyle.every(function(o) {
                     if (o.date === personDates[0]) {
                         noData = false;
                     }
+                    return noData;
                 })
 
                 // Filter data to only include one day
                 let res = person.lifestyle.filter(function(obj, oidx) {
                     if (obj.date === personDates[0]) {
+                        console.log(obj.date);
                         return obj;
                     }
                 })
 
                 if (noData) {
-                    console.log("Missing person");
-                    console.log(missingData);
-                    setMissingData([...missingData, idx]);
+                    missingDataNew.push(idx);
                 }
+
+                // Update missingData using helper variable
+                setMissingData(missingDataNew);
 
 				// Remove lines with old scales
 				svg.selectAll(".line" + idx).remove();
@@ -190,47 +188,26 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
     }, [data, attributeData] ) // Update plot depending on person, attributes (TODO: on date)
 
-type Props = {
-    missingData:number[]
-}
-const MissingDataDisplay: React.FC<Props> = ({missingData}) => {
-    /*if (document.getElementById("MissingPersons") !== null) {
-        let mData = document.getElementById("MissingPersons");
-        //@ts-ignore
-        mData.innerHTML = "";
-    }*/
-
- 
-    return (
-        <div className="MissingData">
-
-                <div id="MissingPersons"> 
-                {console.log(missingData)}
-                <ol>
-                    {
-                        missingData.map((v: number, idx) => <p key={idx}>{v}</p>)
-                    }
-                </ol>
-                </div>
-
-                
-                <p>
-                    is missing data at this date
-                </p>
-        </div>
-    );
-}
-
-console.log(missingData);
-
     return (
         <div>
-        <div id = {"plot"} ref = {ref}>
-        </div>
+            <div id = {"plot"} ref = {ref}>
+            </div>
 
-        {showMissingData ? <MissingDataDisplay missingData={missingData}/> : <></>}
+            {showMissingData &&
+            <div className="MissingData">
+                <div id="MissingPersons"> 
+                    <ol>
+                        {
+                            missingData.map((v: number, idx) => <p key={idx}>{v}</p>)
+                        }
+                    </ol>
+                    <p>
+                        is missing data at this date
+                    </p>
+                </div>
+            </div>
+            }
         </div>
-
     );
 } 
 
