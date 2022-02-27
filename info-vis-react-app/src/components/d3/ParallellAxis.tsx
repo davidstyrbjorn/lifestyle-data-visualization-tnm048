@@ -18,7 +18,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     const data = useRecoilValue(filteredPersonData);
     const attributeData = useRecoilValue(attributeState);
     
-    // const [missingData, setMissingData] = useRecoilState(missingDataState); // Uses default state of missingDataState
+    const [missingD, setMissingData] = useRecoilState<missingDataType>(missingData)
 
 
     const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"];
