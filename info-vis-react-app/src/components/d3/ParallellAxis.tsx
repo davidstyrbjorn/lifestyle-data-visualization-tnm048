@@ -119,8 +119,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 
             });
 
-            let missingDataNew:number[] = [];
-            setMissingData(() => {return [];} );
+            setMissingData([]); // Does not work
 
 
 			// Draw lines for each person
@@ -135,18 +134,21 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 }
 
                 let noData = true;
+                person.lifestyle.map(function(o) {
+                    if (o.date === personDates[0]) {
+                        noData = false;
+                    }
+                })
+
                 // Filter data to only include one day
                 let res = person.lifestyle.filter(function(obj, oidx) {
                     if (obj.date === personDates[0]) {
-                        noData = false;
                         return obj;
                     }
-
                 })
 
                 if (noData) {
                     console.log("Missing person");
-                    // Still feels like a hack solution
                     console.log(missingData);
                     setMissingData([...missingData, idx]);
                 }
