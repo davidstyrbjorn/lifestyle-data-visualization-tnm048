@@ -7,13 +7,10 @@ import useD3 from '../../hooks/useD3';
 import attributeState from '../../states/attribute-state';
 import { filteredPersonData } from '../../states/person-state';
 import '../../styles/components/line-plot.scss';
-import { lifestyle, person_data } from '../../types/types';
+import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
 import getProperty from '../../util/get-property';
 
 const MIN_SLIDER_DIST = 0.05;
-const AVAILABLE_COLORS = [
-    '#f08e8e', '#76e953', '#53e1e9', '#5362e9', '#8f53e9', '#e953dc', '#e95353'
-];
 
 const LinePlotD3: React.FC<{}> = () => {
     // Grab the person data
@@ -28,7 +25,7 @@ const LinePlotD3: React.FC<{}> = () => {
 
     // Returns the current span that the slider knobs cover
     const getSliderDistance = (values: number[]): number => {
-        return values[1] - values[0];
+        return Math.abs(values[1] - values[0]);
     }
 
     const ref = useD3((div: any) => {
@@ -37,17 +34,17 @@ const LinePlotD3: React.FC<{}> = () => {
 
         // Grab the div width and height
         const div_size: number[] = [div._groups[0][0].clientWidth, div._groups[0][0].clientHeight]
+        
+        // set the dimensions and margins of the graph
+        const width = (div_size[0] * 0.8);
+        const height = (div_size[1] * 0.8);
         const margin = {
             top: 20,
             right: 10,
             bottom: 20,
-            left: 25
+            left: 50
         };
-
-        // set the dimensions and margins of the graph
-        const width = (div_size[0] * 0.8);
-        const height = (div_size[1] * 0.8);
-
+        
         // If we haven't added the svg before
         let previous_svg: any = document.getElementsByClassName('line-plot-svg');
         if(previous_svg.length === 0){
@@ -73,15 +70,27 @@ const LinePlotD3: React.FC<{}> = () => {
                 date_strings.push(e.date);
             });
 
+
+        // Initial maxY and minY! We will later go through and grab the max-maxY from every person
         let maxY = d3.max(personDataCopy.at(0)!.lifestyle, 
             (d) => getProperty(d, attributeString) as number)!;
-        let minY = 0;
+        let minY =  d3.min(personDataCopy.at(0)!.lifestyle, 
+            (d) => getProperty(d, attributeString) as number)!;
+        let doMinMax = true;
+        // For some attributes we can just directly assign maxY and minY to 0 and 5 respectively!
+        if(attributeString == 'fatigue' || attributeString == 'mood'
+            || attributeString == 'readiness' || attributeString == 'sleep_quality' || attributeString === 'stress')
+        {
+            minY = 0;
+            maxY = 5;
+            doMinMax = false;
+        }
 
-        // create a time parser
+        // create a time parser function to make our dates into D3 format
         let timeParser = d3.timeParse("%Y-%m-%d");
         
-        // Do a dates union of all available dates!
-        // Perform the union from all other selected persons!
+        // Do a dates union of all available dates
+        // Perform the union from all other selected persons
         // Also here we make sure to extract min of min and max of max for the attributeValu
         for(let i = 1; i < personDataCopy.length; i++){
             personDataCopy.at(i)!.lifestyle.forEach((e) => {
@@ -90,33 +99,33 @@ const LinePlotD3: React.FC<{}> = () => {
                     date_strings.push(e.date);
                 }
             });
-            // Perform min/max calculations
-            let localMaxY = d3.max(personDataCopy.at(i)!.lifestyle, 
-                (d) => getProperty(d, attributeString) as number)!;
-            maxY = localMaxY > maxY ? localMaxY : maxY;
+
+            // See logic where we declare minY and maxY variables
+            if(doMinMax) {
+                // Perform min/max calculations
+                let localMaxY = d3.max(personDataCopy.at(i)!.lifestyle, 
+                    (d) => getProperty(d, attributeString) as number)!;
+                let localMinY = d3.min(personDataCopy.at(i)!.lifestyle, 
+                    (d) => getProperty(d, attributeString) as number)!;
+
+                // Assignment if we are below/above current value
+                maxY = localMaxY > maxY ? localMaxY : maxY;
+                minY = localMinY < minY ? localMinY : minY;
+            }
         }
 
-        // Finally collect them and parse them into Date objects
+        // Finally collect all date union-strings and parse them into Date objects
         let dates: Date[] = [];
-        date_strings.forEach((date_string, idx) => {
+        date_strings.forEach((date_string) => {
             dates.push(timeParser(date_string)!);
         });
 
+        // Sort the dates and cut-off based on the slider input
         dates = dates.sort((d1,d2) => d1 > d2 ? 1 : -1);
         dates = dates.filter((_d, idx) => {
             let relative = idx / dates.length;
             return (relative >= sliderValue[0] && relative <= sliderValue[1])
         });
-
-        // Loop through each person and find minimum and maximum date
-        // let data: Array<lifestyle> = testPerson.lifestyle;
-        // const avgData: number[] = [];
-        // for (let i = 0; i < data.length; i++){
-        //     let relative = i/data.length; // Get the relative index, a value from 0.0 to 1.0
-        //     if(relative >= sliderValue[0] && relative <= sliderValue[1]){
-        //         avgData.push(getProperty(data[i], attributeString) as number);
-        //     }
-        // }
 
         // Create the x-scale
         const [d1, d2] = d3.extent(dates)!;
@@ -128,12 +137,6 @@ const LinePlotD3: React.FC<{}> = () => {
         // Get average of the selected person
         // let avgY = d3.mean(avgData);
 
-        // Is minY zero? Yes for some cases
-        if(attributeString == 'fatigue' || attributeString == 'mood'
-            || attributeString == 'readiness' || attributeString == 'sleep_quality')
-        {
-            minY = 0;
-        }
         // Create the y-scale
         let y = d3.scaleLinear()
             .domain([minY!, maxY!])
@@ -173,30 +176,15 @@ const LinePlotD3: React.FC<{}> = () => {
             svg.append('path')
                 .datum(data)
                 .attr('fill', 'none')
-                .attr('stroke', AVAILABLE_COLORS[idx])
-                .attr('stroke-width', 1.5)
-                .attr('d', d3.line<lifestyle>()
-                    .x(function(d: lifestyle) {return (x(timeParser(d.date)!))})
-                    .y(function(d: lifestyle) {return y(getProperty(d, attributeString) as number)})
-                    // .curve(d3.curveMonotoneX)
-            );
-
-            // Now add all our dots
-            svg.selectAll('myCircles')
-            .data(data)
-            .enter()
-            .append('circle')
-                .attr('fill', AVAILABLE_COLORS[idx])
-                .attr('stroke', 'none')
-                .attr('cx', (d: lifestyle) => x(timeParser(d.date)!))
-                .attr('cy', (d: lifestyle) => y(getProperty(d, attributeString) as number))
-                .attr('r', 5)
-                // Add some tooltip interaction to the dots
-                .on('mouseover', (_event: any, d: lifestyle) => {
-                        const X = x(timeParser(d.date)!)+90;
-                        const Y = y(getProperty(d, attributeString) as number)-40;
-                        const content = `<p> ${attributeString} value: ${getProperty(d, attributeString)}</p><br/>
-                            <p>Date: ${d.date}</p>`;
+                .attr('stroke', AVAILABLE_COLORS[idx].primary)
+                .attr('stroke-width', 3.5)
+                // Add some tooltip interaction to the lines
+                .on('mouseover', (event: MouseEvent) => {
+                    const X = event.pageX; 
+                    const Y = event.pageY - 120;
+                    const content = `
+                        <h4>${p_data.name}</h4> 
+                    `;
                     showTooltip(tooltip_div, content, X, Y);
                 })
                 .on('mouseout', (_d) => {
@@ -204,31 +192,68 @@ const LinePlotD3: React.FC<{}> = () => {
                         .duration(500)		
                         .style("opacity", 0);	
                 })
-        });
-            
-        // + the average line
-        // extract min and max dates from dates array, used to get extents on the x-axis
-        // const d1 = dates.reduce((d1, d2) => d1 < d2 ? d1 : d2);
-        // const d2 = dates.reduce((d1, d2) => d1 > d2 ? d1 : d2);
-        // svg.append('line')
-        //     .style('stroke', 'cyan')
-        //     .style('stroke-width', 3)
-        //     .attr('x1', x(d1))
-        //     .attr('y1', y(avgY!))
-        //     .attr('x2', x(d2))
-        //     .attr('y2', y(avgY!))
-        //     .on('mouseenter', (event: any) => {
-        //         const X = event.pageX; 
-        //         const Y = event.pageY - 120;
-        //         const content = `<p>The average value over the selected timespan: 
-        //             ${parseFloat(avgY!.toString()).toFixed(2)}</p>`;
-        //         showTooltip(tooltip_div, content, X, Y);
-        //     })
-        //     .on('mouseleave', (_event: any) => {
-        //         tooltip_div.transition()		
-        //             .duration(500)		
-        //             .style("opacity", 0);	
-        //     });        
+                .attr('d', d3.line<lifestyle>()
+                    .x(function(d: lifestyle) {return (x(timeParser(d.date)!))})
+                    .y(function(d: lifestyle) {return y(getProperty(d, attributeString) as number)})
+                    .curve(d3.curveMonotoneX)
+                
+            );
+
+            // Now add all our dots
+            svg.selectAll('myCircles')
+            .data(data)
+            .enter()
+            .append('circle')
+                .attr('fill', AVAILABLE_COLORS[idx].primary)
+                .attr('stroke', 'none')
+                .attr('cx', (d: lifestyle) => x(timeParser(d.date)!))
+                .attr('cy', (d: lifestyle) => y(getProperty(d, attributeString) as number))
+                .attr('r', 7)
+                // Add some tooltip interaction to the dots
+                .on('mouseover', (event: MouseEvent, d: lifestyle) => {
+                    const X = event.pageX+10; 
+                    const Y = event.pageY - 130;
+                    const content = `
+                        <h4>${p_data.name}</h4>
+                        <p> ${attributeString} value: ${getProperty(d, attributeString)}</p>
+                        <p>Date: ${d.date}</p>
+                    `;
+                    showTooltip(tooltip_div, content, X, Y);
+                })
+                .on('mouseout', (_d) => {
+                    tooltip_div.transition()		
+                        .duration(500)		
+                        .style("opacity", 0);	
+                })
+
+            // Calculate the average for this person
+            let avg = d3.mean(data, (entry) => getProperty(entry, attributeString) as number);
+            // Draw the average line
+            svg.append('line')
+                .style('stroke', AVAILABLE_COLORS[idx].primary)
+                .style('stroke-width', 4)
+                .style('stroke-dasharray', "3,3")
+                .attr('x1', x(d1!))
+                .attr('y1', y(avg!))
+                .attr('x2', x(d2!))
+                .attr('y2', y(avg!))
+                .on('mouseover', (event: MouseEvent) => {
+                    const X = event.pageX+10; 
+                    const Y = event.pageY - 130;
+                    const d1_pretty = d1!.toISOString().split('T')[0];
+                    const d2_pretty = d2!.toISOString().split('T')[0];
+                    const content = `
+                        <h4>${p_data.name}</h4>
+                        <p>Average value from ${d1_pretty} to ${d2_pretty}: ${avg?.toFixed(3)}</p>
+                    `;
+                    showTooltip(tooltip_div, content, X, Y);
+                })
+                .on('mouseout', (_d) => {
+                    tooltip_div.transition()		
+                        .duration(500)		
+                        .style("opacity", 0);	
+                })
+        });        
 
     }, [personData, attributeData, sliderValue]);
 
@@ -267,13 +292,25 @@ const LinePlotD3: React.FC<{}> = () => {
             <div className={'tooltip'}></div>
             <div ref={ref} className={'visualization-area'}>
             </div>
-            <div className={'slider-area'}>
-                <Box 
-                    margin={'auto'}
-                    width="50%"
-                >
+            <div className={'bottom-area'}>
+                <div className='legend'>
+                    {personData.map((person: person_data, idx: number) => {
+                        return (
+                            <div className='legend-entry' key={idx}>
+                                <div style={{
+                                    width: 24,
+                                    height: 24,
+                                    backgroundColor: AVAILABLE_COLORS[idx].primary
+                                }}></div>
+                                <p>{person.name}</p>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className='slider-area'>
                     <p className='slider-title'>Range Slider</p>
                     <Slider
+                        style={{width: "50"}}
                         getAriaLabel={() => 'Date range slider'}
                         value={sliderValue}
                         onChange={handleSliderChange}
@@ -283,7 +320,7 @@ const LinePlotD3: React.FC<{}> = () => {
                         valueLabelDisplay="auto"
                         disableSwap
                     />
-                </Box>
+                </div>
             </div>           
 		</div>
     );
