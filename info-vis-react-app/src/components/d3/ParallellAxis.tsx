@@ -7,22 +7,28 @@ import '../../styles/components/parallell-axis.scss';
 import { attributeState } from "../../states/attribute-state";
 import { lifestyle } from "../../types/types";
 
-let showMissingData:boolean = false; // To not render missingdata from undefined
+let showMissingData:boolean = false;
+let showDatePicker:boolean = false;
+let personDates:string[] = [];
+let oldDate:string = "";
+let currentDate:string = ""; 
 
 const ParallellAxisPlot: React.FC<{}> = () => {
 
     const [missingData, setMissingData] = useState<number[]>([]); // Persons who have data missing on the selected date
     const data = useRecoilValue(filteredPersonData); // Person data
     const attributeData = useRecoilValue(attributeState); // Attribute data
+    const [dateIndex, setDateIndex] = useState<number>(0);
 
     const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"]; // Color list 
 
+
     // Update axis depending on data, useD3 handles like useEffect
     const ref = useD3((div: any) => {
-        console.log("Main hook", missingData);
         if (data.length !== 0) {
 
             showMissingData = true;
+            showDatePicker = true;
 
             // Get selected attributes from attribute state
             const selectedAttributes: string[] = []; 
@@ -34,8 +40,8 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
             // Drawing the canvas
             const margin = {top: 200, right: 50, bottom: 50, left: 50}
-            const width = 600 - margin.left - margin.right;
-            const height =  600 - margin.top - margin.bottom;
+            const width = 900 - margin.left - margin.right;
+            const height =  900 - margin.top - margin.bottom;
 
             // Only draw background if no previous plot exists
             let previous_svg: any = document.getElementsByClassName('p-axis-plot');
@@ -65,7 +71,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 			const selectedAttributesMin:number[] = [];
 			let maxY;
 			let minY; 
-            let personDates:string[] = []; // List of selectable dates
+            personDates = []; // List of selectable dates
 
 			// Create linear scale with biggest span among all persons
             data.map(function(person, pidx){
@@ -126,23 +132,29 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     // @ts-ignore
                     return d3.line()(selectedAttributes.map(function(p:any) { return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
                 }
+
+    
                 
                 // To flag if person should show to have missing data for date
                 let noData = true;
+                console.log(person);
                 person.lifestyle.every(function(o) {
-                    if (o.date === personDates[0]) {
+                    if (o.date === personDates[dateIndex]) {
                         noData = false;
                     }
                     return noData;
                 })
-
+                console.log(personDates);
+                console.log(dateIndex);
+                console.log(personDates[dateIndex]);
                 // Filter data to only include one day
                 let res = person.lifestyle.filter(function(obj, oidx) {
-                    if (obj.date === personDates[0]) {
-                        console.log(obj.date);
+                    if (obj.date === personDates[dateIndex]) {
                         return obj;
                     }
                 })
+
+                console.log(idx, res);
 
                 if (noData) {
                     missingDataNew.push(idx);
@@ -153,7 +165,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
 				// Remove lines with old scales
 				svg.selectAll(".line" + idx).remove();
-                
+
                 // Draw new lines
                 svg
                 .selectAll("myPath")
@@ -163,6 +175,8 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .attr("d", path).attr("class", "line" + idx)
                 .style("fill", "none")
                 .style("stroke", colors[idx])
+                .style("opacity", 1.0)
+                .style('mix-blend-mode', "overlay")
                 .attr("transform", "translate(" + 0 + "," + margin.top + ")");
                 
                 svg.selectAll(".axis").remove();
@@ -172,41 +186,96 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .selectAll("myAxis")
                 .data(selectedAttributes).enter()
                 .append("g")
+                .attr("class", "AxisWhite")
                 .attr("transform", function(d) { return "translate(" + x(d) + "," + margin.top + ")"; }) // Transalate axis to right position
                 //@ts-ignore
                 .each(function(d) { d3.select(this).attr("class", "axis").call(d3.axisLeft().scale(y[d])); })
-                .style("fill", "white") 
+                .style("stroke", "white")
                 .append("text")
                 .style("text-anchor", "middle")
-                .style("fill", "white") 
                 .attr("y", -9)
-                .text(function(d) { return d; })
-                .style("fill", "white");
+                .text(function(d) { return d; });
 			});
 
         }
 
-    }, [data, attributeData] ) // Update plot depending on person, attributes (TODO: on date)
+    }, [data, attributeData, dateIndex] ) // Update plot depending on person, attributes (TODO: on date)
+
+    // Update date on person change, picks next closest date to last chosen date if last chosen date does not exist in new date list
+    useEffect(() => {
+        if (data.length !== 0) {
+            if (oldDate === "") {
+                
+                currentDate = personDates[0];
+                oldDate = currentDate; 
+            }
+            else {
+                if (personDates.includes(oldDate)) {
+                    let index = personDates.indexOf(oldDate);
+                    currentDate = personDates[index]; 
+                    oldDate = currentDate;
+                }
+                else {
+                    console.log("old date", oldDate);
+                    for (let i = 0; i < personDates.length; i++) {
+                        if (personDates[i] === oldDate) {
+                            currentDate = personDates[i];
+                            break;
+                        }
+                        else if (personDates[i] > oldDate) {
+                            currentDate = personDates[i];
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        setDateIndex(personDates.indexOf(currentDate));
+    },[data])   
+
+    function incremendDate() {
+        if (dateIndex < personDates.length) {
+            setDateIndex(dateIndex + 1);
+            oldDate = personDates[dateIndex];
+        }
+    }
+
+    function decrementDate() {
+        if (dateIndex > 0) {
+            setDateIndex(dateIndex - 1);
+            oldDate = personDates[dateIndex];
+        }
+    }
 
     return (
         <div>
             <div id = {"plot"} ref = {ref}>
             </div>
 
-            {showMissingData &&
-            <div className="MissingData">
-                <div id="MissingPersons"> 
-                    <ol>
-                        {
-                            missingData.map((v: number, idx) => <p key={idx}>{v}</p>)
-                        }
-                    </ol>
-                    <p>
-                        is missing data at this date
-                    </p>
+            <div className="GraphInfo">
+                {showMissingData &&
+                <div className="MissingData">
+                    
+                    <div id="MissingPersons"> 
+                        <p>Person &nbsp;</p>
+                            {
+                                missingData.map((v: number, idx) => <p key={idx}>{v + 1} &nbsp; </p>)
+                            }
+                        <p>
+                            is missing data at this date
+                        </p>
+                    </div>
                 </div>
+                }
+
+                {showDatePicker &&
+                    <div className="Datepicker">
+                        <button onClick={decrementDate}> Previous </button> 
+                        <p> {personDates[dateIndex]} </p>
+                        <button onClick={incremendDate}> Next </button>
+                    </div>
+                }
             </div>
-            }
         </div>
     );
 } 

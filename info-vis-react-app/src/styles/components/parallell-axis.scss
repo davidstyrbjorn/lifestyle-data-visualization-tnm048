@@ -1,7 +1,31 @@
 #plot {
-    padding-top: 10%;
+    justify-content: space-around;
 }
 
 .MissingData {
     padding-left: 20%;
+    display: inline;
+
+}
+
+#MissingPersons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.axis {
+    stroke: white;
+}
+
+.Datepicker {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.GraphInfo {
+    padding-top: 2rem;
+    align-content: center;
+    justify-content: space-around;
 }
