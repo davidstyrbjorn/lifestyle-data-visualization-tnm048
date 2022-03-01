@@ -8,10 +8,15 @@ import '../styles/components/sidebar.scss';
 export const PersonList: React.FC<{}> = () => {
     return(
         <div id='personList'>
-            {/* Map over all people to make list of checkboxes */}
-            {availablePerson.map((name, idx) => (
-                <PersonCheckbox name={name} key = {idx}/>
-            ))}
+            <div className="attribute-header">
+                <h2>Select person/s</h2>
+            </div>
+            <ul>
+                {/* Map over all people to make list of checkboxes */}
+                {availablePerson.map((name, idx) => (
+                    <PersonCheckbox name={name} key = {idx}/>
+                ))}
+            </ul>
         </div>
     )
 }

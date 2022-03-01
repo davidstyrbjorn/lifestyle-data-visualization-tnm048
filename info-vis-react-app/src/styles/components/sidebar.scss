@@ -5,6 +5,13 @@
     align-items: center;
 }
 
-.title {
-    text-align: center;
+.attribute-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 20px;
+}
+
+.attribute-title {
+    padding-right: 10px;
 }
