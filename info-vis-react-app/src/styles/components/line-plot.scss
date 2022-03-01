@@ -13,6 +13,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+
+    h3 {
+        padding-top: 32px;
+        color: white;
+    }
 }
 
 .bottom-area {
@@ -95,7 +101,26 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    flex-direction: row;
+    flex-direction: column;
     flex: 2.5;
     height: 100%;
 }
+
+.slider-container {
+    width: 60%;
+}
+
+.slider-row {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+
+    // TODO: Align this text vertically!
+    p {
+        color: white;
+        text-align-last: center;
+        text-align: center;
+    }
+}
+

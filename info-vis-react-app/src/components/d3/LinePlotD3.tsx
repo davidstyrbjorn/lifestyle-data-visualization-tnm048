@@ -1,5 +1,4 @@
 import { Slider } from '@mui/material';
-import { Box } from '@mui/system';
 import * as d3 from 'd3';
 import React, { useState } from 'react';
 import { useRecoilValue } from 'recoil';
@@ -17,6 +16,7 @@ const LinePlotD3: React.FC<{}> = () => {
     const personData = useRecoilValue(filteredPersonData);
     const attributeData = useRecoilValue(attributeState);
     const [sliderValue, setSliderValue] = useState<number[]>([0.0, 1.0]);
+    const [minMaxDate, setMinMaxDate] = useState<string[]>(['1', '2']);
 
     // d3 helper function
     const make_y_gridlines = (y_scale: any): d3.Axis<d3.AxisDomain> => {
@@ -77,14 +77,18 @@ const LinePlotD3: React.FC<{}> = () => {
         let minY =  d3.min(personDataCopy.at(0)!.lifestyle, 
             (d) => getProperty(d, attributeString) as number)!;
         let doMinMax = true;
-        // For some attributes we can just directly assign maxY and minY to 0 and 5 respectively!
+        // For some attributes we can just directly assign maxY and minY
         if(attributeString == 'fatigue' || attributeString == 'mood'
-            || attributeString == 'readiness' || attributeString == 'sleep_quality' || attributeString === 'stress')
+            || attributeString == 'sleep_quality' || attributeString === 'stress')
         {
             minY = 0;
             maxY = 5;
             doMinMax = false;
         }
+        else if(attributeString == 'readiness') {
+            minY = 0;
+            maxY = 10;
+        }   
 
         // create a time parser function to make our dates into D3 format
         let timeParser = d3.timeParse("%Y-%m-%d");
@@ -128,14 +132,11 @@ const LinePlotD3: React.FC<{}> = () => {
         });
 
         // Create the x-scale
-        const [d1, d2] = d3.extent(dates)!;
+        const [d1, d2] = d3.extent(dates)!; // Get min and max
         let x = d3.scaleTime()
             .domain([d1!, d2!])
             .range([margin.left, width - margin.right]);
         let xAxis = d3.axisBottom(x);
-
-        // Get average of the selected person
-        // let avgY = d3.mean(avgData);
 
         // Create the y-scale
         let y = d3.scaleLinear()
@@ -159,19 +160,25 @@ const LinePlotD3: React.FC<{}> = () => {
             .attr('transform', `translate(0, ${height - margin.bottom})`)
             .call(xAxis.ticks(8));
 
-        // Add the y-scale to the DOM
+        // Add the y-scale to DOM
         svg.append("g")
             .attr('class', 'axis-y')
             .attr('transform', `translate(${margin.left}, 0)`)
             .call(yAxis)
 
-        // Select the tooltip div
+        // Select the tooltip div, used in the for loop below
         let tooltip_div = d3.select('.tooltip')
             .style('opacity', 0);
 
-        // Now add all our lines from the data
+        // Now iterate over each person and add data to the plot 
         personData.forEach((p_data: person_data, idx: number) => {
-            const data = p_data.lifestyle;
+            // const data = p_data.lifestyle;
+
+            // Filter the data based on date
+            const data = p_data.lifestyle.filter((entry: lifestyle) => {
+                const d = timeParser(entry.date)!;
+                return d >= d1! && d <= d2!;
+            })
 
             svg.append('path')
                 .datum(data)
@@ -215,8 +222,8 @@ const LinePlotD3: React.FC<{}> = () => {
                     const Y = event.pageY - 130;
                     const content = `
                         <h4>${p_data.name}</h4>
-                        <p> ${attributeString} value: ${getProperty(d, attributeString)}</p>
-                        <p>Date: ${d.date}</p>
+                        <p> ${attributeString} value: <strong>${getProperty(d, attributeString)}</strong></p>
+                        <p>Date: <strong>${d.date}</strong></p>
                     `;
                     showTooltip(tooltip_div, content, X, Y);
                 })
@@ -244,7 +251,9 @@ const LinePlotD3: React.FC<{}> = () => {
                     const d2_pretty = d2!.toISOString().split('T')[0];
                     const content = `
                         <h4>${p_data.name}</h4>
-                        <p>Average value from ${d1_pretty} to ${d2_pretty}: ${avg?.toFixed(3)}</p>
+                        <p>Average value from <strong>${d1_pretty}</strong> 
+                        to <strong>${d2_pretty}</strong>: 
+                        <strong>${avg?.toFixed(3)}</strong></p>
                     `;
                     showTooltip(tooltip_div, content, X, Y);
                 })
@@ -253,12 +262,16 @@ const LinePlotD3: React.FC<{}> = () => {
                         .duration(500)		
                         .style("opacity", 0);	
                 })
-        });        
+        }); 
+        
+        // And get the pretty min and max date strings
+        const d1_pretty = d1!.toISOString().split('T')[0];
+        const d2_pretty = d2!.toISOString().split('T')[0];
+        setMinMaxDate([d1_pretty, d2_pretty]);
 
     }, [personData, attributeData, sliderValue]);
 
-    // TODO: This function does NOT do what i expect it to do with the limits
-    const handleSliderChange = (e: Event, v: number | number[], activeThumb: number) => {
+    const handleSliderChange = (_e: Event, v: number | number[], _activeThumb: number) => {
         // Return if the incoming value is NOT an array, something is wrong from the component side
         if(!Array.isArray(v)) {
             console.error("SOMETHING WRONG IN LINE-PLOT SLIDER handleSliderChange(...)!!!");
@@ -291,6 +304,7 @@ const LinePlotD3: React.FC<{}> = () => {
         <div className={'my-dataviz'}>
             <div className={'tooltip'}></div>
             <div ref={ref} className={'visualization-area'}>
+                <h3>{minMaxDate[0]} - {minMaxDate[1]}</h3>
             </div>
             <div className={'bottom-area'}>
                 <div className='legend'>
@@ -298,9 +312,10 @@ const LinePlotD3: React.FC<{}> = () => {
                         return (
                             <div className='legend-entry' key={idx}>
                                 <div style={{
+                                    backgroundColor: AVAILABLE_COLORS[idx].primary,
                                     width: 24,
                                     height: 24,
-                                    backgroundColor: AVAILABLE_COLORS[idx].primary
+                                    borderRadius: 5
                                 }}></div>
                                 <p>{person.name}</p>
                             </div>
@@ -308,18 +323,22 @@ const LinePlotD3: React.FC<{}> = () => {
                     })}
                 </div>
                 <div className='slider-area'>
-                    <p className='slider-title'>Range Slider</p>
-                    <Slider
-                        style={{width: "50"}}
-                        getAriaLabel={() => 'Date range slider'}
-                        value={sliderValue}
-                        onChange={handleSliderChange}
-                        min={0}
-                        step={0.1}
-                        max={1}
-                        valueLabelDisplay="auto"
-                        disableSwap
-                    />
+                    <p className='slider-title'>Date Range</p>
+                    <div className='slider-row'>
+                        <div className="slider-container">
+                            <Slider
+                                style={{height: 16}}
+                                getAriaLabel={() => 'Date range slider'}
+                                value={sliderValue}
+                                onChange={handleSliderChange}
+                                min={0}
+                                step={0.1}
+                                max={1}
+                                valueLabelDisplay="auto"
+                                disableSwap
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>           
 		</div>
