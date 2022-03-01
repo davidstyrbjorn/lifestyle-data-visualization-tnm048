@@ -9,7 +9,7 @@ import { lifestyle } from "../../types/types";
 
 let showMissingData:boolean = false;
 let showDatePicker:boolean = false;
-let personDates:Set<string>; 
+let personDates:string[] = [];
 let oldDate:string = "";
 let currentDate:string = ""; 
 
@@ -18,7 +18,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     const [missingData, setMissingData] = useState<number[]>([]); // Persons who have data missing on the selected date
     const data = useRecoilValue(filteredPersonData); // Person data
     const attributeData = useRecoilValue(attributeState); // Attribute data
-    const [date, setDate] = useState<string>("");
+    const [dateIndex, setDateIndex] = useState<number>(0);
 
     const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"]; // Color list 
 
@@ -70,36 +70,26 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 			const selectedAttributesMax:number[] = [];
 			const selectedAttributesMin:number[] = [];
 			let maxY;
-			let minY; 
-            // List of selectable dates
+			let minY;
 
-            personDates = new Set([]);
+           
+            let pd:Set<string> = new Set([]);  // Temporary set of dates to create union between all persons
 
 			// Create linear scale with biggest span among all persons
             data.map(function(person, pidx){
 
-                // Choosing the largest date span among all persons
-                // if (personDates.length === 0) {
-                //     person.lifestyle.map(function(o) {
-                //         personDates.push(o.date);
-                //     });
-                // }
-                // else if (person.lifestyle.length > personDates.length) {
-                //     personDates = [];
-                //     person.lifestyle.map(function(o) {
-                //         personDates.push(o.date);
-                //     });
-                // }
-
-                const setData = []; 
-
+                const setData:string[] = []; 
                 person.lifestyle.map(function(o) {
                     setData.push(o.date);
                 });
 
-                const pDates = new Set(setData);
-                const union = new Set([...pDates, ...personDates]);
-                personDates = union;
+                // Create union of all dates among the persons
+                const pDates:Set<string> = new Set(setData);
+                // @ts-ignore
+                const union = new Set([...pDates, ...pd]);
+                pd = union;
+
+                personDates = Array.from(pd);
 
                 for (let i = 0; i < selectedAttributes.length; i++) {
                     const name = selectedAttributes[i]; // Getting names of attributes
@@ -151,7 +141,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 let noData = true;
                 console.log(person);
                 person.lifestyle.every(function(o) {
-                    if (o.date === date) {
+                    if (o.date === personDates[dateIndex]) {
                         noData = false;
                     }
                     return noData;
@@ -159,7 +149,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
                 // Filter data to only include one day
                 let res = person.lifestyle.filter(function(obj, oidx) {
-                    if (obj.date === date) {
+                    if (obj.date === personDates[dateIndex]) {
                         return obj;
                     }
                 })
@@ -186,6 +176,24 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .style("opacity", 1.0)
                 .style('mix-blend-mode', "overlay")
                 .attr("transform", "translate(" + 0 + "," + margin.top + ")");
+                console.log(selectedAttributes[0]);
+
+                svg
+                .selectAll("myDots")
+                .data(res)
+                .enter().append("circle")
+                .attr("r", 6)
+                //@ts-ignore
+                .attr("cx", function(d, didx) { return x(selectedAttributes[didx]);} )
+                //@ts-ignore
+                .attr("cy", function(d, didx) { 
+                    let attr = selectedAttributes[didx];
+                    console.log(attr);
+                    let attr_val = (d as any)[attr];
+                    let y_scale = y[attr];
+                    return y_scale(attr_val);
+                });
+
                 
                 svg.selectAll(".axis").remove();
 
@@ -207,47 +215,43 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
         }
 
-    }, [data, attributeData, date] ) // Update plot depending on person, attributes (TODO: on date)
+    }, [data, attributeData, dateIndex] ) // Update plot depending on person, attributes (TODO: on date)
 
     // Update date on person change, picks next closest date to last chosen date if last chosen date does not exist in new date list
     useEffect(() => {
-        // if (data.length !== 0) {
-        //     if (oldDate === "") {
-        //         currentDate = personDates[0];
-        //         oldDate = currentDate; 
-        //     }
-        //     else {
-        //         if (personDates.has(oldDate)) {
-        //             let index = [...personDates].indexOf(oldDate);
-        //             currentDate = personDates[index]; 
-        //             oldDate = currentDate;
-        //         }
-        //         else {
-        //             console.log("old date", oldDate);
-        //             for (let i = 0; i < personDates.size; i++) {
-        //                 if ([...personDates][i] === oldDate) {
-        //                     currentDate = [...personDates][i];
-        //                     break;
-        //                 }
-        //                 else if ([...personDates][i] > oldDate) {
-        //                     currentDate = [...personDates][i];
-        //                     break;
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-        // setDateIndex([...personDates].indexOf(currentDate));
 
         if (data.length !== 0) {
             if (oldDate === "") {
-                currentDate
+                currentDate = personDates[0];
+                oldDate = currentDate; 
+            }
+            else {
+                if (personDates.includes(oldDate)) {
+                    let index = personDates.indexOf(oldDate);
+                    currentDate = personDates[index]; 
+                    oldDate = currentDate;
+                }
+                else {
+                    console.log("old date", oldDate);
+                    for (let i = 0; i < personDates.length; i++) {
+                        if (personDates[i] === oldDate) {
+                            currentDate = personDates[i];
+                            break;
+                        }
+                        else if (personDates[i] > oldDate) {
+                            currentDate = personDates[i];
+                            break;
+                        }
+                    }
+                }
             }
         }
+        setDateIndex(personDates.indexOf(currentDate));
+    
     },[data])   
 
     function incrementDate() {
-        if (dateIndex < personDates.size) {
+        if (dateIndex < personDates.length) {
             setDateIndex(dateIndex + 1);
             oldDate = personDates[dateIndex];
         }
@@ -285,7 +289,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     <div className="Datepicker">
                         <button onClick={decrementDate}> Previous </button> 
                         <p> {personDates[dateIndex]} </p>
-                        <button onClick={incremendDate}> Next </button>
+                        <button onClick={incrementDate}> Next </button>
                     </div>
                 }
             </div>
