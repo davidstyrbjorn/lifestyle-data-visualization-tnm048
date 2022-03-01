@@ -14,7 +14,8 @@ const SpiderPlot: React.FC<{}> = () => {
     // Grab the person data
     const personData = useRecoilValue(filteredPersonData);
     const data = useRecoilValue(filteredPersonData);
-    const [sliderValue, setSliderValue] = useState<number[]>([0.0, 1.0]);
+    const [sliderValue, setSliderValue] = useState<number>(0.0);
+    const [minMaxDate, setMinMaxDate] = useState<string[]>(['1', '2']);
 
     // Set the dimensions and margins of the graph
     let margin = {top: 100, right: 0, bottom: 0, left: 100},
@@ -44,9 +45,24 @@ const SpiderPlot: React.FC<{}> = () => {
             return;
         }
         else {
-            //TEMP: grab specific day
+            // Find domain for dates, mostly same as how it works in LinePlot. Maybe move this somewhere where
+            // it can be accessed by all plots?
+            let date_strings: string[] = []; // save as string since it easier to compare (they all share same format)
+        
+            let personDataCopy = [...personData];
+
+            // Grab the personData with the most entries!
+            personDataCopy.sort((a, b) => a.lifestyle.length < b.lifestyle.length ? 1 : -1)
+                .at(0)!
+                .lifestyle.forEach((e, idx) => {
+                    date_strings.push(e.date);
+            });
+
+            console.log(date_strings);
+            
+
             let res = data[0].lifestyle.filter(obj => {
-                return obj.date === "2019-11-06"
+                return obj.date === date_strings[0];
             })
             if(res.length < 1) {
                 return; // @TODO: Display error message if this happens
