@@ -1,2 +1,126 @@
-@use '../shared.scss'
+@use '../shared.scss';
+
+.my-dataviz {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.visualization-area {
+    flex: 5;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    h3 {
+        padding-top: 32px;
+        color: white;
+    }
+}
+
+.bottom-area {
+    flex: 1.4;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 100%;
+}
+
+.axis-x, .axis-y {
+    color: white;
+}
+
+.axis-y text {
+    font-size: 12px;
+    color: white;
+}
+
+.axis-x text {
+    font-size: 10px;
+    color: white;
+}
+
+.grid {
+    color: gray;
+}
+
+.tooltip {
+    position: fixed;
+    width: 250px;
+    height: 100px;
+    border-radius: 10px;
+    background: white;
+    padding: 10px;
+}
+
+.tooltip p {
+    margin: 0;
+}
+
+.slider-title {
+    text-align: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.fallback-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.fallback-text {
+    color: white;
+}
+
+.legend {
+    flex: 1;
+    padding-left: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.legend p {
+    color: white;
+    padding-left: 10px;
+}
+
+.legend-entry {
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
+}
+
+.slider-area {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    flex: 2.5;
+    height: 100%;
+}
+
+.slider-container {
+    width: 60%;
+}
+
+.slider-row {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+
+    // TODO: Align this text vertically!
+    p {
+        color: white;
+        text-align-last: center;
+        text-align: center;
+    }
+}
 

@@ -1,7 +1,8 @@
-import { Checkbox, FormControlLabel } from "@mui/material";
-import React from "react";
+import { Checkbox, FormControlLabel, IconButton } from "@mui/material";
+import React, { useState } from "react";
 import { useRecoilState } from "recoil";
 import attributeState from "../states/attribute-state";
+import '../styles/components/sidebar.scss';
 import { attribute_options } from "../types/types";
 import { makeAttributePresentable } from "../util/attribute-util";
 
@@ -19,7 +20,6 @@ const AttributeList: React.FC<{}> = () => {
             // Remove selected index
             setAttribute({...attribute, selectedAttributes: [...attribute.selectedAttributes.filter(idx => index !== idx)]})
         }
-
     }
 
     // Helper function for swiching checkbox
@@ -27,8 +27,18 @@ const AttributeList: React.FC<{}> = () => {
         return attribute.selectedAttributes.includes(index);
     }
 
+    const gotoInfoPage = () => {
+        window.open('https://datasets.simula.no/pmdata/');
+    }
+
     return (
     <div>
+        <div className="attribute-header">
+            <h2 className="attribute-title">Select attribute/s</h2>
+            <IconButton color="info" aria-label="upload picture" component="span" onClick={gotoInfoPage}>
+                <p>?</p>
+            </IconButton>
+        </div>
         <ul>
             {attribute.availableAttributes.map((val: attribute_options, idx: number) => {
                 return (
@@ -42,19 +52,6 @@ const AttributeList: React.FC<{}> = () => {
                     </div> 
                 )
             })}
-        </ul>
-        
-        Chosen attributes:
-        <ul>
-            {
-                // Just to check the selection works
-                attribute.selectedAttributes.map((val: number, idx: number) => {
-                    return (
-                        <div className = "checkbox" key={idx}>
-                            {attribute.availableAttributes[val]}
-                        </div>
-                    )
-                })}
         </ul>
     </div>
     );

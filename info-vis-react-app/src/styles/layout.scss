@@ -10,16 +10,13 @@ body {
 }
 
 .visualization-view {
-    background-color: #38342F;
+    background-color: #24211d;
     flex: 3;
 }
 
 .sidebar {
     background-color:azure;
     flex: 1;
-}
-
-.sidebar {
     flex-direction: column;
     display: flex;
 }
@@ -31,9 +28,4 @@ body {
 
 .sidebar .bot {
     flex: 1;
-}
-
-.checkbox {
-    display: block;
-    align-items: center;
 }
