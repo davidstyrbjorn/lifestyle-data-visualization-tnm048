@@ -9,7 +9,7 @@ import { lifestyle } from "../../types/types";
 
 let showMissingData:boolean = false;
 let showDatePicker:boolean = false;
-let personDates:string[] = [];
+let personDates:Set<string>; 
 let oldDate:string = "";
 let currentDate:string = ""; 
 
@@ -18,7 +18,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     const [missingData, setMissingData] = useState<number[]>([]); // Persons who have data missing on the selected date
     const data = useRecoilValue(filteredPersonData); // Person data
     const attributeData = useRecoilValue(attributeState); // Attribute data
-    const [dateIndex, setDateIndex] = useState<number>(0);
+    const [date, setDate] = useState<string>("");
 
     const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"]; // Color list 
 
@@ -71,23 +71,35 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 			const selectedAttributesMin:number[] = [];
 			let maxY;
 			let minY; 
-            personDates = []; // List of selectable dates
+            // List of selectable dates
+
+            personDates = new Set([]);
 
 			// Create linear scale with biggest span among all persons
             data.map(function(person, pidx){
 
                 // Choosing the largest date span among all persons
-                if (personDates.length === 0) {
-                    person.lifestyle.map(function(o) {
-                        personDates.push(o.date);
-                    });
-                }
-                else if (person.lifestyle.length > personDates.length) {
-                    personDates = [];
-                    person.lifestyle.map(function(o) {
-                        personDates.push(o.date);
-                    });
-                }
+                // if (personDates.length === 0) {
+                //     person.lifestyle.map(function(o) {
+                //         personDates.push(o.date);
+                //     });
+                // }
+                // else if (person.lifestyle.length > personDates.length) {
+                //     personDates = [];
+                //     person.lifestyle.map(function(o) {
+                //         personDates.push(o.date);
+                //     });
+                // }
+
+                const setData = []; 
+
+                person.lifestyle.map(function(o) {
+                    setData.push(o.date);
+                });
+
+                const pDates = new Set(setData);
+                const union = new Set([...pDates, ...personDates]);
+                personDates = union;
 
                 for (let i = 0; i < selectedAttributes.length; i++) {
                     const name = selectedAttributes[i]; // Getting names of attributes
@@ -139,22 +151,18 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 let noData = true;
                 console.log(person);
                 person.lifestyle.every(function(o) {
-                    if (o.date === personDates[dateIndex]) {
+                    if (o.date === date) {
                         noData = false;
                     }
                     return noData;
                 })
-                console.log(personDates);
-                console.log(dateIndex);
-                console.log(personDates[dateIndex]);
+
                 // Filter data to only include one day
                 let res = person.lifestyle.filter(function(obj, oidx) {
-                    if (obj.date === personDates[dateIndex]) {
+                    if (obj.date === date) {
                         return obj;
                     }
                 })
-
-                console.log(idx, res);
 
                 if (noData) {
                     missingDataNew.push(idx);
@@ -199,42 +207,47 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
         }
 
-    }, [data, attributeData, dateIndex] ) // Update plot depending on person, attributes (TODO: on date)
+    }, [data, attributeData, date] ) // Update plot depending on person, attributes (TODO: on date)
 
     // Update date on person change, picks next closest date to last chosen date if last chosen date does not exist in new date list
     useEffect(() => {
+        // if (data.length !== 0) {
+        //     if (oldDate === "") {
+        //         currentDate = personDates[0];
+        //         oldDate = currentDate; 
+        //     }
+        //     else {
+        //         if (personDates.has(oldDate)) {
+        //             let index = [...personDates].indexOf(oldDate);
+        //             currentDate = personDates[index]; 
+        //             oldDate = currentDate;
+        //         }
+        //         else {
+        //             console.log("old date", oldDate);
+        //             for (let i = 0; i < personDates.size; i++) {
+        //                 if ([...personDates][i] === oldDate) {
+        //                     currentDate = [...personDates][i];
+        //                     break;
+        //                 }
+        //                 else if ([...personDates][i] > oldDate) {
+        //                     currentDate = [...personDates][i];
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // setDateIndex([...personDates].indexOf(currentDate));
+
         if (data.length !== 0) {
             if (oldDate === "") {
-                
-                currentDate = personDates[0];
-                oldDate = currentDate; 
-            }
-            else {
-                if (personDates.includes(oldDate)) {
-                    let index = personDates.indexOf(oldDate);
-                    currentDate = personDates[index]; 
-                    oldDate = currentDate;
-                }
-                else {
-                    console.log("old date", oldDate);
-                    for (let i = 0; i < personDates.length; i++) {
-                        if (personDates[i] === oldDate) {
-                            currentDate = personDates[i];
-                            break;
-                        }
-                        else if (personDates[i] > oldDate) {
-                            currentDate = personDates[i];
-                            break;
-                        }
-                    }
-                }
+                currentDate
             }
         }
-        setDateIndex(personDates.indexOf(currentDate));
     },[data])   
 
-    function incremendDate() {
-        if (dateIndex < personDates.length) {
+    function incrementDate() {
+        if (dateIndex < personDates.size) {
             setDateIndex(dateIndex + 1);
             oldDate = personDates[dateIndex];
         }
