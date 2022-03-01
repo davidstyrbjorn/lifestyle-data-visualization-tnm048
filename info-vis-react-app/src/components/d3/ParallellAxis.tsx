@@ -135,14 +135,14 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 				// Path drawing function which creates the lines between all attributes. Takes in lifestyle object(s) and returns a d3 line.
                 function path(d:any) {
                     // @ts-ignore
-                    return d3.line()(selectedAttributes.map(function(p:any) { return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
+                    return d3.line()(selectedAttributes.map(function(p:any) { 
+                        return [x(p) /*Scale attributes to x-axis*/, y[p](d[p])/*Scale attribute values to y-axis*/]; }));
                 }
 
     
                 
                 // To flag if person should show to have missing data for date
                 let noData = true;
-                console.log(person);
                 person.lifestyle.every(function(o) {
                     if (o.date === personDates[dateIndex]) {
                         noData = false;
@@ -184,14 +184,18 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .style("opacity", 1.0)
                 .attr("transform", "translate(" + 0 + "," + margin.top + ")")
 
+                // Draw an extra transparent line with extra thickness to make hovering easier
                 svg
-                .selectAll("tooltipLine")
+                .selectAll("myPath")
+                .append("g")
+                //@ts-ignore
                 .data(res)
                 .enter().append("path")
-                .attr("d", path).attr("class", "tooltipline" + idx)
-                .style("opacity", 0.1)
-                .style("stroke-width", 10)
-                .style("background-blend-mode", "lighten")
+                .attr("d", path).attr("class", "line" + idx)
+                .style("stroke-width", 15)
+                .style("fill", "none")
+                .style("stroke", "blue")
+                .style("opacity", 0)
                 .attr("transform", "translate(" + 0 + "," + margin.top + ")")
                 .on("mouseover", function(event: MouseEvent) {
                     d3.select(this).transition()
@@ -213,8 +217,6 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                         .style("opacity", 0)
                 })
 
-
-                
                 svg.selectAll(".axis").remove();
 
                 // Draw axis
@@ -235,7 +237,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
         }
 
-    }, [data, attributeData, dateIndex] ) // Update plot depending on person, attributes (TODO: on date)
+    }, [data, attributeData, dateIndex] ) // Update plot depending on person, attributes and date
 
     // Update date on person change, picks next closest date to last chosen date if last chosen date does not exist in new date list
     useEffect(() => {
@@ -252,7 +254,6 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     oldDate = currentDate;
                 }
                 else {
-                    console.log("old date", oldDate);
                     for (let i = 0; i < personDates.length; i++) {
                         if (personDates[i] === oldDate) {
                             currentDate = personDates[i];
@@ -283,7 +284,6 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             oldDate = personDates[dateIndex];
         }
     }
-
 
     return (
         <div>
