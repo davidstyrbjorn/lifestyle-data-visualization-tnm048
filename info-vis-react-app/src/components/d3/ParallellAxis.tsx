@@ -6,6 +6,9 @@ import { filteredPersonData } from "../../states/person-state";
 import '../../styles/components/parallell-axis.scss';
 import { attributeState } from "../../states/attribute-state";
 import { lifestyle } from "../../types/types";
+import getProperty from "../../util/get-property";
+import { duration } from "@mui/material";
+import { selectAll } from "d3";
 
 let showMissingData:boolean = false;
 let showDatePicker:boolean = false;
@@ -164,35 +167,52 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 				// Remove lines with old scales
 				svg.selectAll(".line" + idx).remove();
 
+                let tooltip_div = d3.select(".tooltip")
+                    .style("opacity", 0);
+
                 // Draw new lines
                 svg
                 .selectAll("myPath")
+                .append("g")
                 //@ts-ignore
                 .data(res)
                 .enter().append("path")
                 .attr("d", path).attr("class", "line" + idx)
+                .style("stroke-width", 2)
                 .style("fill", "none")
                 .style("stroke", colors[idx])
                 .style("opacity", 1.0)
-                .style('mix-blend-mode', "overlay")
-                .attr("transform", "translate(" + 0 + "," + margin.top + ")");
-                console.log(selectedAttributes[0]);
+                .attr("transform", "translate(" + 0 + "," + margin.top + ")")
 
                 svg
-                .selectAll("myDots")
+                .selectAll("tooltipLine")
                 .data(res)
-                .enter().append("circle")
-                .attr("r", 6)
-                //@ts-ignore
-                .attr("cx", function(d, didx) { return x(selectedAttributes[didx]);} )
-                //@ts-ignore
-                .attr("cy", function(d, didx) { 
-                    let attr = selectedAttributes[didx];
-                    console.log(attr);
-                    let attr_val = (d as any)[attr];
-                    let y_scale = y[attr];
-                    return y_scale(attr_val);
-                });
+                .enter().append("path")
+                .attr("d", path).attr("class", "tooltipline" + idx)
+                .style("opacity", 0.1)
+                .style("stroke-width", 10)
+                .style("background-blend-mode", "lighten")
+                .attr("transform", "translate(" + 0 + "," + margin.top + ")")
+                .on("mouseover", function(event: MouseEvent) {
+                    d3.select(this).transition()
+                        .duration(50)
+                        .attr("opacity", "0.85");
+                    tooltip_div.transition()
+                        .duration(50)
+                        .style("opacity", 1)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 15) + "px")
+                    tooltip_div.html(person.name)
+                })
+                .on("mouseout", function() {
+                    d3.select(this).transition()
+                        .duration(50)
+                        .attr("opacity", 1)
+                    tooltip_div.transition()
+                        .duration(50)
+                        .style("opacity", 0)
+                })
+
 
                 
                 svg.selectAll(".axis").remove();
@@ -264,11 +284,12 @@ const ParallellAxisPlot: React.FC<{}> = () => {
         }
     }
 
+
     return (
         <div>
             <div id = {"plot"} ref = {ref}>
             </div>
-
+            <div className={'tooltip'}></div>
             <div className="GraphInfo">
                 {showMissingData &&
                 <div className="MissingData">
