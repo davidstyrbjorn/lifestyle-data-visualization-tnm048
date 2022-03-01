@@ -58,11 +58,9 @@ const SpiderPlot: React.FC<{}> = () => {
                     date_strings.push(e.date);
             });
 
-            console.log(date_strings);
-            
-
             let res = data[0].lifestyle.filter(obj => {
-                return obj.date === date_strings[0];
+                clearPlot(); // Clear old figure to make space for new.
+                return obj.date === date_strings[sliderValue]; // Get current date from slider
             })
             if(res.length < 1) {
                 return; // @TODO: Display error message if this happens
@@ -198,7 +196,18 @@ const SpiderPlot: React.FC<{}> = () => {
             });
         }
 
-    }, [personData]);
+    }, [personData, sliderValue]);
+
+    const handleSliderChange = (_e: Event, v: number | number[], _activeThumb: number) => {
+        // Return if the incoming value is NOT an array, something is wrong from the component side
+        if(Array.isArray(v)) {
+            console.error("SOMETHING WRONG IN LINE-PLOT SLIDER handleSliderChange(...)!!!");
+            return;
+        }
+        //console.log(v);
+        // Update the value
+        setSliderValue(v);
+    }
 
     if(personData.length < 1 || !data[0] ) {
         clearPlot();
@@ -214,13 +223,14 @@ const SpiderPlot: React.FC<{}> = () => {
                     margin={'auto'}
                     width="50%"
                 >
-                    <p className='slider-title'>Range Slider</p>
+                    <p className='slider-title'>Date Slider</p>
                     <Slider
-                        getAriaLabel={() => 'Date range slider'}
+                        getAriaLabel={() => 'Date slider'}
                         value={sliderValue}
+                        onChange={handleSliderChange}
                         min={0}
-                        step={0.1}
-                        max={1}
+                        step={1}
+                        max={10}
                         valueLabelDisplay="auto"
                         disableSwap
                     />
