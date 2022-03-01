@@ -60,7 +60,12 @@ const SpiderPlot: React.FC<{}> = () => {
 
             let res = data[0].lifestyle.filter(obj => {
                 clearPlot(); // Clear old figure to make space for new.
-                return obj.date === date_strings[sliderValue]; // Get current date from slider
+
+                // Get correct index from slider
+                let entries = date_strings.length;
+                let idx = entries + sliderValue - 1;
+                
+                return obj.date === date_strings[idx]; // Get current date from slider
             })
             if(res.length < 1) {
                 return; // @TODO: Display error message if this happens
@@ -228,9 +233,9 @@ const SpiderPlot: React.FC<{}> = () => {
                         getAriaLabel={() => 'Date slider'}
                         value={sliderValue}
                         onChange={handleSliderChange}
-                        min={0}
+                        min={-30}
                         step={1}
-                        max={10}
+                        max={0}
                         valueLabelDisplay="auto"
                         disableSwap
                     />
