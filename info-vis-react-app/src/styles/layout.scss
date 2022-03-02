@@ -29,3 +29,12 @@ body {
 .sidebar .bot {
     flex: 1;
 }
+
+.button-row {
+    position: absolute;
+    display: flex;
+}
+
+.button-row .button {
+    margin: 8px;
+}
