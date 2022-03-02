@@ -7,7 +7,7 @@ import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
 
 import '../../styles/components/line-plot.scss';
-import { lifestyle } from '../../types/types';
+import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
 
 // With inspiration from this tutorial: https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
 const SpiderPlot: React.FC<{}> = () => {
@@ -28,6 +28,8 @@ const SpiderPlot: React.FC<{}> = () => {
     const lightGreen = "#88A54B";
     const darkGreen = "#607534";
 
+
+
     // Center of spider plot circles
     let center = {x: width/2, y: height/2};
 
@@ -38,6 +40,39 @@ const SpiderPlot: React.FC<{}> = () => {
         .remove();
     }
 
+    let legend_dates: string[] = [];
+
+    // Find domain for dates, mostly same as how it works in LinePlot. Maybe move this somewhere where
+    // it can be accessed by all plots?
+    let date_strings: string[] = []; // save as string since it easier to compare (they all share same format)
+
+    // Process data beforehand
+    let personDataCopy = [...personData];
+    let res: lifestyle[] = [];
+    if(personData.length > 0) {
+        // Grab the personData with the most entries!
+        personDataCopy.sort((a, b) => a.lifestyle.length < b.lifestyle.length ? 1 : -1)
+            .at(0)!
+            .lifestyle.forEach((e, idx) => {
+                date_strings.push(e.date);
+        });
+
+        res = data[0].lifestyle.filter(obj => {
+            clearPlot(); // Clear old figure to make space for new.
+
+            // Get correct index from slider
+            let entries = date_strings.length;
+            let idx = entries + sliderValue - 1;
+
+            let dateResult = date_strings[idx];
+            legend_dates.push(dateResult);
+            //console.log(legend_dates);
+
+            return obj.date === dateResult; // Get current date from slider
+        })
+    } 
+
+
     const ref = useD3((div: any) =>  {
         // Clear plot and return if no person is selected
         if(personData.length === 0 || !data[0]) {
@@ -45,28 +80,6 @@ const SpiderPlot: React.FC<{}> = () => {
             return;
         }
         else {
-            // Find domain for dates, mostly same as how it works in LinePlot. Maybe move this somewhere where
-            // it can be accessed by all plots?
-            let date_strings: string[] = []; // save as string since it easier to compare (they all share same format)
-        
-            let personDataCopy = [...personData];
-
-            // Grab the personData with the most entries!
-            personDataCopy.sort((a, b) => a.lifestyle.length < b.lifestyle.length ? 1 : -1)
-                .at(0)!
-                .lifestyle.forEach((e, idx) => {
-                    date_strings.push(e.date);
-            });
-
-            let res = data[0].lifestyle.filter(obj => {
-                clearPlot(); // Clear old figure to make space for new.
-
-                // Get correct index from slider
-                let entries = date_strings.length;
-                let idx = entries + sliderValue - 1;
-                
-                return obj.date === date_strings[idx]; // Get current date from slider
-            })
             if(res.length < 1) {
                 return; // @TODO: Display error message if this happens
             }
@@ -228,7 +241,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     margin={'auto'}
                     width="50%"
                 >
-                    <p className='slider-title'>Date Slider</p>
+                    <p className='slider-title'>Entry slider</p>
                     <Slider
                         getAriaLabel={() => 'Date slider'}
                         value={sliderValue}
@@ -237,10 +250,25 @@ const SpiderPlot: React.FC<{}> = () => {
                         step={1}
                         max={0}
                         valueLabelDisplay="auto"
-                        disableSwap
                     />
                 </Box>
             </div>
+            <div className='legend'>
+                    {personData.map((person: person_data, idx: number) => {
+                        console.log(legend_dates);
+                        return (
+                            <div className='legend-entry' key={idx}>
+                                <div style={{
+                                    backgroundColor: lightGreen,
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: 5
+                                }}></div>
+                                <p>{legend_dates[idx]!}</p>
+                            </div>
+                        );
+                    })}
+                </div>
         </div>
     );
 }
