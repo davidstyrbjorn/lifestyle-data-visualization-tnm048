@@ -19,6 +19,7 @@ const LinePlotD3: React.FC<{}> = () => {
     const [sliderValue, setSliderValue] = useState<number[]>([0.0, 0.3]);
     const [minMaxDate, setMinMaxDate] = useState<string[]>(['1', '2']);
 
+    // Grab the browser window size
     const window_size = useWindowDimensions();
 
     // d3 helper function
@@ -31,7 +32,7 @@ const LinePlotD3: React.FC<{}> = () => {
         return Math.abs(values[1] - values[0]);
     }
 
-    const ref = useD3((div: any) => {
+    const ref = useD3((_div: any) => {
         if(personData.length <= 0) return;
         if(attributeData.selectedAttributes.length === 0) return;
 
@@ -70,7 +71,6 @@ const LinePlotD3: React.FC<{}> = () => {
                 date_strings.push(e.date);
             });
 
-
         // Initial maxY and minY! We will later go through and grab the max-maxY from every person
         let maxY = d3.max(personDataCopy.at(0)!.lifestyle, 
             (d) => getProperty(d, attributeString) as number)!;
@@ -78,14 +78,14 @@ const LinePlotD3: React.FC<{}> = () => {
             (d) => getProperty(d, attributeString) as number)!;
         let doMinMax = true;
         // For some attributes we can just directly assign maxY and minY
-        if(attributeString == 'fatigue' || attributeString == 'mood'
-            || attributeString == 'sleep_quality' || attributeString === 'stress')
+        if(attributeString === 'fatigue' || attributeString === 'mood'
+            || attributeString === 'sleep_quality' || attributeString === 'stress')
         {
             minY = 0;
             maxY = 5;
             doMinMax = false;
         }
-        else if(attributeString == 'readiness') {
+        else if(attributeString === 'readiness') {
             minY = 0;
             maxY = 10;
         }   
@@ -202,7 +202,7 @@ const LinePlotD3: React.FC<{}> = () => {
                 .attr('d', d3.line<lifestyle>()
                     .x(function(d: lifestyle) {return (x(timeParser(d.date)!))})
                     .y(function(d: lifestyle) {return y(getProperty(d, attributeString) as number)})
-                    .curve(d3.curveMonotoneX)
+                    // .curve(d3.curveMonotoneX)
                 
             );
 
