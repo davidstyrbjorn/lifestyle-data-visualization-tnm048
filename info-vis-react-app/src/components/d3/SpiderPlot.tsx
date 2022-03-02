@@ -5,6 +5,7 @@ import { Box } from '@mui/system';
 import { useRecoilValue } from 'recoil';
 import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
+import { attributeState } from "../../states/attribute-state";
 
 import '../../styles/components/line-plot.scss';
 import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
@@ -14,7 +15,9 @@ const SpiderPlot: React.FC<{}> = () => {
     // Grab the person data
     const personData = useRecoilValue(filteredPersonData);
     const data = useRecoilValue(filteredPersonData);
+
     const [sliderValue, setSliderValue] = useState<number>(0.0);
+    const attributeData = useRecoilValue(attributeState);
     const [minMaxDate, setMinMaxDate] = useState<string[]>(['1', '2']);
 
     // Set the dimensions and margins of the graph
@@ -43,6 +46,15 @@ const SpiderPlot: React.FC<{}> = () => {
     // Process data beforehand
     let personDataCopy = [...personData];
     let res: lifestyle[][] = [];
+
+    // Get selected attributes from attribute state
+    const attributes: string[] = [];
+
+    attributeData.availableAttributes.map(function(val, idx) {
+    if (attributeData.selectedAttributes.includes(idx))
+        attributes.push(val);
+    });
+
     if(personData.length > 0) {
         // Grab the personData with the most entries!
         personDataCopy.sort((a, b) => a.lifestyle.length < b.lifestyle.length ? 1 : -1)
@@ -53,14 +65,14 @@ const SpiderPlot: React.FC<{}> = () => {
 
         data.forEach(function (person, index) { 
             let filteredData = data[index].lifestyle.filter(obj => {
-                clearPlot(); // Clear old figure to make space for new.
+                clearPlot(); // Clear old figure to make space for new. 
     
                 // Get correct index from slider
                 let entries = date_strings.length;
                 let dateIdx = entries + sliderValue - 1;
     
                 let dateResult = date_strings[dateIdx];
-                legend_dates.push(dateResult);
+                legend_dates.push(dateResult); // @TODO: This is incorrect
                 //console.log(legend_dates);
     
                 return obj.date === dateResult; // Get current date from slider
@@ -133,6 +145,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     return [center.x + x, center.y - y];
                 }
 
+                /*
                 const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
 
                 // Temporarily, only use attributes in range 1-5
@@ -144,6 +157,7 @@ const SpiderPlot: React.FC<{}> = () => {
                         attributes.push(attr[index]);
                     }
                 });
+                */
 
                 // Amount of attributes
                 let length = attributes.length;
@@ -217,7 +231,7 @@ const SpiderPlot: React.FC<{}> = () => {
         }
         
 
-    }, [personData, sliderValue]);
+    }, [personData, sliderValue, attributes]);
 
     const handleSliderChange = (_e: Event, v: number | number[], _activeThumb: number) => {
         // Return if the incoming value is NOT an array, something is wrong from the component side
@@ -244,7 +258,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     margin={'auto'}
                     width="50%"
                 >
-                    <p className='slider-title'>Entry slider</p>
+                    <p className='slider-title'>Current date: {legend_dates[0]}</p>
                     <Slider
                         getAriaLabel={() => 'Date slider'}
                         value={sliderValue}
@@ -266,7 +280,7 @@ const SpiderPlot: React.FC<{}> = () => {
                                     height: 24,
                                     borderRadius: 5
                                 }}></div>
-                                <p>{legend_dates[idx]!}</p>
+                                <p>{person.name}</p>
                             </div>
                         );
                     })}
