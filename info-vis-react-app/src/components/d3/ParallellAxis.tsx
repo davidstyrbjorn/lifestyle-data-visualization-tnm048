@@ -5,16 +5,18 @@ import useD3 from "../../hooks/useD3";
 import { filteredPersonData } from "../../states/person-state";
 import '../../styles/components/parallell-axis.scss';
 import { attributeState } from "../../states/attribute-state";
-import { lifestyle } from "../../types/types";
+import { AVAILABLE_COLORS, lifestyle } from "../../types/types";
 import getProperty from "../../util/get-property";
 import { duration } from "@mui/material";
 import { selectAll } from "d3";
+import { Button } from '@mui/material';
 
 let showMissingData:boolean = false;
 let showDatePicker:boolean = false;
 let personDates:string[] = [];
 let oldDate:string = "";
-let currentDate:string = ""; 
+let currentDate:string = "";
+
 
 const ParallellAxisPlot: React.FC<{}> = () => {
 
@@ -23,7 +25,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     const attributeData = useRecoilValue(attributeState); // Attribute data
     const [dateIndex, setDateIndex] = useState<number>(0);
 
-    const colors:string[] = ["#fc0b03", "#fc8403", "#fcf803", "#7bfc03", "#007804", "#00fbff", "#004cff", "#4c00ff"]; // Color list 
+    const colors = AVAILABLE_COLORS // Color list 
 
 
     // Update axis depending on data, useD3 handles like useEffect
@@ -41,10 +43,17 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 }
             }); 
 
+            const div_size: number[] = [div._groups[0][0].clientWidth, div._groups[0][0].clientHeight]
+
+            
+
             // Drawing the canvas
-            const margin = {top: 200, right: 50, bottom: 50, left: 50}
-            const width = 900 - margin.left - margin.right;
-            const height =  900 - margin.top - margin.bottom;
+            const margin = {top: 100, right: 50, bottom: 100, left: 50}
+            const width = (div_size[0] * 0.9) - margin.left - margin.right;
+            const height =  (div_size[1] * 0.9) - margin.top - margin.bottom;
+            const padding = {top: 50, right: 50, bottom: 50, left: 200}
+
+            console.log(height);
 
             // Only draw background if no previous plot exists
             let previous_svg: any = document.getElementsByClassName('p-axis-plot');
@@ -167,9 +176,6 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 				// Remove lines with old scales
 				svg.selectAll(".line" + idx).remove();
 
-                let tooltip_div = d3.select(".tooltip")
-                    .style("opacity", 0);
-
                 // Draw new lines
                 svg
                 .selectAll("myPath")
@@ -180,9 +186,12 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .attr("d", path).attr("class", "line" + idx)
                 .style("stroke-width", 2)
                 .style("fill", "none")
-                .style("stroke", colors[idx])
+                .style("stroke", colors[idx].primary)
                 .style("opacity", 1.0)
-                .attr("transform", "translate(" + 0 + "," + margin.top + ")")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+                let tooltip_div = d3.select(".tooltip")
+                .style("opacity", 0); 
 
                 // Draw an extra transparent line with extra thickness to make hovering easier
                 svg
@@ -196,7 +205,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .style("fill", "none")
                 .style("stroke", "blue")
                 .style("opacity", 0)
-                .attr("transform", "translate(" + 0 + "," + margin.top + ")")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
                 .on("mouseover", function(event: MouseEvent) {
                     d3.select(this).transition()
                         .duration(50)
@@ -206,7 +215,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                         .style("opacity", 1)
                         .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 15) + "px")
-                    tooltip_div.html(person.name)
+                    tooltip_div.html(`<p>${person.name.toUpperCase()}</p>`)
                 })
                 .on("mouseout", function() {
                     d3.select(this).transition()
@@ -224,14 +233,14 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .selectAll("myAxis")
                 .data(selectedAttributes).enter()
                 .append("g")
-                .attr("class", "AxisWhite")
-                .attr("transform", function(d) { return "translate(" + x(d) + "," + margin.top + ")"; }) // Transalate axis to right position
+                //@ts-ignore
+                .attr("transform", function(d) { return "translate(" + (x(d) + margin.left) + "," + margin.top + ")"; }) // Transalate axis to right position
                 //@ts-ignore
                 .each(function(d) { d3.select(this).attr("class", "axis").call(d3.axisLeft().scale(y[d])); })
-                .style("stroke", "white")
                 .append("text")
                 .style("text-anchor", "middle")
                 .attr("y", -9)
+                .attr("class", "axis-text")
                 .text(function(d) { return d; });
 			});
 
@@ -286,33 +295,33 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     }
 
     return (
-        <div>
+        <div className="Visualization">
             <div id = {"plot"} ref = {ref}>
+                    <div className={'tooltip'}></div>
             </div>
-            <div className={'tooltip'}></div>
             <div className="GraphInfo">
-                {showMissingData &&
-                <div className="MissingData">
-                    
-                    <div id="MissingPersons"> 
-                        <p>Person &nbsp;</p>
-                            {
-                                missingData.map((v: number, idx) => <p key={idx}>{v + 1} &nbsp; </p>)
-                            }
-                        <p>
-                            is missing data at this date
-                        </p>
+                    {showMissingData &&
+                    <div className="MissingData">
+                        
+                        <div id="MissingPersons"> 
+                            <p className="InfoText">Person &nbsp;</p>
+                                {
+                                    missingData.map((v: number, idx) => <p className="InfoText" key={idx}>{v + 1} &nbsp; </p>)
+                                }
+                            <p className="InfoText">
+                                is missing data at this date
+                            </p>
+                        </div>
                     </div>
-                </div>
-                }
+                    }
 
-                {showDatePicker &&
-                    <div className="Datepicker">
-                        <button onClick={decrementDate}> Previous </button> 
-                        <p> {personDates[dateIndex]} </p>
-                        <button onClick={incrementDate}> Next </button>
-                    </div>
-                }
+                    {showDatePicker &&
+                        <div className="Datepicker">
+                            <Button variant="contained" className="DateButton" onClick={decrementDate}> Previous </Button> 
+                                <p className="DateText"> {personDates[dateIndex]} </p>
+                            <Button variant="contained" className="DateButton" onClick={incrementDate}> Next </Button>
+                        </div>
+                    }
             </div>
         </div>
     );
