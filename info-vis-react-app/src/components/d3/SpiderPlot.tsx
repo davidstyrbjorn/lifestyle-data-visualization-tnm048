@@ -24,7 +24,7 @@ const SpiderPlot: React.FC<{}> = () => {
     let margin = {top: 100, right: 0, bottom: 0, left: 100},
         width = 900 - margin.left - margin.right,
         height = 900 - margin.top - margin.bottom,
-        strokeWidth = 5;
+        strokeWidth = 2;
 
 
     // Center of spider plot circles
@@ -65,7 +65,7 @@ const SpiderPlot: React.FC<{}> = () => {
         });
 
         data.forEach(function (person, index) { 
-            let filteredData = data[index].lifestyle.filter(obj => {
+            let filteredData = data[index]!.lifestyle.filter(obj => {
                 clearPlot(); // Clear old figure to make space for new. 
     
                 // Get correct index from slider
@@ -73,10 +73,10 @@ const SpiderPlot: React.FC<{}> = () => {
                 let dateIdx = entries + sliderValue - 1;
     
                 let dateResult = date_strings[dateIdx];
-                currentDate = dateResult; // @TODO: This is incorrect
-                //console.log(legend_dates);
+                currentDate = dateResult;
     
-                return obj.date === dateResult; // Get current date from slider
+                // Get current date from slider
+                return obj.date === dateResult;
             })
             res.push(filteredData);
         });
@@ -129,15 +129,6 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr("r", scale(tick))
                 ));
 
-                // Label circles with tick values
-                ticks.forEach(tick => (
-                    spiderPlotSvg.append("text")
-                        .attr("fill", "azure")
-                        .attr("x", center.x + 3 * strokeWidth)
-                        .attr("y", center.y - 2 * strokeWidth - scale(tick))
-                        .text(tick.toString())
-                ));
-
                 // Converts from polar coordinates to cartesian
                 const angleToCoord = (angle: number, value: number): [number, number] => {
                     let r = scale(value);
@@ -145,20 +136,6 @@ const SpiderPlot: React.FC<{}> = () => {
                     let y = r * Math.sin(angle);
                     return [center.x + x, center.y - y];
                 }
-
-                /*
-                const attr = Object.keys(data[0].lifestyle[0]); // Getting keys from each entry
-
-                // Temporarily, only use attributes in range 1-5
-                const allowedAttribs = ['fatigue', 'mood', 'readiness', 'sleep_quality']
-                const attributes:string[] = []; 
-                attr.forEach(function (item, index) {
-                    if (allowedAttribs.includes(item)) {
-                        //console.log("CONTAINS " + item);
-                        attributes.push(attr[index]);
-                    }
-                });
-                */
 
                 // Amount of attributes
                 let length = attributes.length;
@@ -179,7 +156,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     let angle = (2*Math.PI * index / length) + (Math.PI / 2);
 
                     let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
-                    let [textX, textY] = angleToCoord(angle, domainRange.max + 1);
+                    let [textX, textY] = angleToCoord(angle, domainRange.max + 2);
 
                     let attributeName = item;
 
@@ -194,7 +171,7 @@ const SpiderPlot: React.FC<{}> = () => {
 
                     // Text fields marking the different attribute names
                     spiderPlotSvg.append("text")
-                        .attr("text-align", "center")
+                        .attr("text-anchor", "middle")
                         .attr("x", textX)
                         .attr("y", textY)
                         .attr("fill", "azure")
@@ -211,7 +188,7 @@ const SpiderPlot: React.FC<{}> = () => {
                             .attr('cx', (d) => angleToCoord(angle, d[item])[0])
                             //@ts-ignore
                             .attr('cy', (d) => angleToCoord(angle, d[item])[1])
-                            .attr('r', 15)
+                            .attr('r', 10)
                             .attr('z-index', 2);
 
                     let line = d3.line()
@@ -222,9 +199,21 @@ const SpiderPlot: React.FC<{}> = () => {
                     spiderPlotSvg.append("path")
                         .datum(coordinates)
                         .attr("d", line)
-                        .attr("fill", "white")
+                        .attr("fill", AVAILABLE_COLORS[entryIndex].primary)
                         .attr("stroke-opacity", 1)
-                        .attr("opacity", 0.1);
+                        .attr("opacity", 0.05);
+
+                    
+                    // Label circles with tick values
+                    ticks.forEach(tick => (
+                        spiderPlotSvg.append("text")
+                            .attr("fill", "white")
+                            .attr("font-size", 24)
+                            .attr("x", angleToCoord(angle, tick)[0])
+                            .attr("y", angleToCoord(angle, tick)[1])
+                            .attr("text-anchor", "middle")
+                            .text(tick.toString())
+                    ));
 
                 });
              });
