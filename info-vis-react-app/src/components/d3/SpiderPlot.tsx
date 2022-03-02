@@ -37,7 +37,8 @@ const SpiderPlot: React.FC<{}> = () => {
         .remove();
     }
 
-    let legend_dates: string[] = [];
+    //let legend_dates: string[] = [];
+    let currentDate: string = "";
 
     // Find domain for dates, mostly same as how it works in LinePlot. Maybe move this somewhere where
     // it can be accessed by all plots?
@@ -72,7 +73,7 @@ const SpiderPlot: React.FC<{}> = () => {
                 let dateIdx = entries + sliderValue - 1;
     
                 let dateResult = date_strings[dateIdx];
-                legend_dates.push(dateResult); // @TODO: This is incorrect
+                currentDate = dateResult; // @TODO: This is incorrect
                 //console.log(legend_dates);
     
                 return obj.date === dateResult; // Get current date from slider
@@ -258,7 +259,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     margin={'auto'}
                     width="50%"
                 >
-                    <p className='slider-title'>Current date: {legend_dates[0]}</p>
+                    <p className='slider-title'>Current date: {currentDate}</p>
                     <Slider
                         getAriaLabel={() => 'Date slider'}
                         value={sliderValue}
