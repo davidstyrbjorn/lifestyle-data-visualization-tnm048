@@ -20,6 +20,13 @@ const SpiderPlot: React.FC<{}> = () => {
     const attributeData = useRecoilValue(attributeState);
     const [minMaxDate, setMinMaxDate] = useState<string[]>(['1', '2']);
 
+    // Clear the spider plot svg
+    const clearPlot = () => {
+        d3.select('#spider_viz')
+        .selectAll("*")
+        .remove();
+    }
+
     // Set the dimensions and margins of the graph
     let margin = {top: 100, right: 0, bottom: 0, left: 100},
         width = 900 - margin.left - margin.right,
@@ -29,13 +36,6 @@ const SpiderPlot: React.FC<{}> = () => {
 
     // Center of spider plot circles
     let center = {x: width/2, y: height/2};
-
-    // Clear the spider plot svg
-    const clearPlot = () => {
-        d3.select('#spider_viz')
-        .selectAll("*")
-        .remove();
-    }
 
     //let legend_dates: string[] = [];
     let currentDate: string = "";
@@ -65,8 +65,7 @@ const SpiderPlot: React.FC<{}> = () => {
         });
 
         data.forEach(function (person, index) { 
-            let filteredData = data[index]!.lifestyle.filter(obj => {
-                clearPlot(); // Clear old figure to make space for new. 
+            let filteredData = data[index]!.lifestyle.filter(obj => { 
     
                 // Get correct index from slider
                 let entries = date_strings.length;
@@ -84,11 +83,11 @@ const SpiderPlot: React.FC<{}> = () => {
 
 
     const ref = useD3((div: any) =>  {
-        // Clear plot and return if no person is selected
-        if(personData.length === 0 || !data[0]) {
-            clearPlot();
-            return;
-        }
+        // Make space for new plot
+        clearPlot();
+
+        // Return if no person is selected
+        if(personData.length === 0 || !data[0]) return;
 
         else {
             res.forEach(function (entry, entryIndex) {
@@ -96,15 +95,6 @@ const SpiderPlot: React.FC<{}> = () => {
                 if(res[entryIndex].length < 1) {
                     return; // @TODO: Display error message if this happens
                 }
-
-                // Linear range with values ranging from 0-5
-                let domainRange = {min: 0, max: 5};
-                let scale = d3.scaleLinear()
-                    .domain([domainRange.min, domainRange.max])
-                    .range([0, 250]);
-
-                // Tick values displayed along circle border
-                let ticks = [1, 2, 3, 4, 5];
 
                 // If we haven't added the svg before
                 let previous_svg: any = document.getElementsByClassName('spider-plot-svg');
@@ -118,6 +108,15 @@ const SpiderPlot: React.FC<{}> = () => {
 
                 let spiderPlotSvg = d3.select('.spider-plot-svg');
 
+                // Linear range with values ranging from 0-5
+                let domainRange = {min: 0, max: 5};
+                let scale = d3.scaleLinear()
+                    .domain([domainRange.min, domainRange.max])
+                    .range([0, 250]);
+
+                // Tick values displayed along circle border
+                let ticks = [1, 2, 3, 4, 5];
+                
                 // Add circles representing values 1-5
                 ticks.forEach(tick => (
                     spiderPlotSvg.append("circle")
@@ -157,9 +156,7 @@ const SpiderPlot: React.FC<{}> = () => {
 
                     let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
                     let [textX, textY] = angleToCoord(angle, domainRange.max + 2);
-
-                    let attributeName = item;
-
+                    
                     // Draw lines from center to edges of spider plot
                     spiderPlotSvg.append("line")
                         .attr("x1", center.x)
@@ -175,7 +172,7 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr("x", textX)
                         .attr("y", textY)
                         .attr("fill", "azure")
-                        .text(attributeName);
+                        .text(item);
 
                     // Draw nodes at path points.
                     spiderPlotSvg.selectAll('spiderPlotNodes')
