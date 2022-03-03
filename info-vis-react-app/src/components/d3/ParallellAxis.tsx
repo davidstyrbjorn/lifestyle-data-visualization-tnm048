@@ -9,7 +9,8 @@ import { AVAILABLE_COLORS, lifestyle } from "../../types/types";
 import getProperty from "../../util/get-property";
 import { duration } from "@mui/material";
 import { selectAll } from "d3";
-import { Button } from '@mui/material';
+import { Button, Checkbox } from '@mui/material';
+import { get } from "https";
 
 let showMissingData:boolean = false;
 let showDatePicker:boolean = false;
@@ -24,6 +25,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     const data = useRecoilValue(filteredPersonData); // Person data
     const attributeData = useRecoilValue(attributeState); // Attribute data
     const [dateIndex, setDateIndex] = useState<number>(0);
+    const [displayAverageDate, setDisplayAverageDate] = useState<boolean>(false);
 
     const colors = AVAILABLE_COLORS // Color list 
 
@@ -166,6 +168,28 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     }
                 })
 
+                let averageValuesDict: Record<string, number> = {};
+
+                if (displayAverageDate) {
+                    selectedAttributes.forEach(function (attr, idx) {
+                        const mean = d3.mean(person.lifestyle, (d) => getProperty(d, attr as keyof lifestyle) as number)!;
+                        averageValuesDict[attr] = mean;
+                    })
+                }
+
+                let drawRes;
+                
+                if (!displayAverageDate) {
+                    drawRes = res;
+                }
+                else {
+                    drawRes = []
+                    drawRes[0] = averageValuesDict;
+                }
+
+
+                console.log("2", drawRes);
+
                 if (noData) {
                     missingDataNew.push(idx);
                 }
@@ -181,7 +205,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .selectAll("myPath")
                 .append("g")
                 //@ts-ignore
-                .data(res)
+                .data(drawRes)
                 .enter().append("path")
                 .attr("d", path).attr("class", "line" + idx)
                 .style("stroke-width", 2)
@@ -198,7 +222,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .selectAll("myPath")
                 .append("g")
                 //@ts-ignore
-                .data(res)
+                .data(drawRes)
                 .enter().append("path")
                 .attr("d", path).attr("class", "line" + idx)
                 .style("stroke-width", 15)
@@ -246,7 +270,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
         }
 
-    }, [data, attributeData, dateIndex] ) // Update plot depending on person, attributes and date
+    }, [data, attributeData, dateIndex, displayAverageDate] ) // Update plot depending on person, attributes and date
 
     // Update date on person change, picks next closest date to last chosen date if last chosen date does not exist in new date list
     useEffect(() => {
@@ -294,10 +318,23 @@ const ParallellAxisPlot: React.FC<{}> = () => {
         }
     }
 
+    function toggleAverage() {
+        let tmp:boolean = displayAverageDate;
+        tmp = !tmp;
+        setDisplayAverageDate(tmp);
+    }
+
     return (
         <div className="Visualization">
             <div id = {"plot"} ref = {ref}>
                     <div className={'tooltip'}></div>
+            </div>
+            <div className="average-values">
+                <Checkbox checked={displayAverageDate} onChange={toggleAverage}/>
+                <p className="InfoText"> Showing average attribute values from </p>
+                <p className="InfoText">{personDates[0]}</p>
+                <p className="InfoText"> to </p>
+                <p className="InfoText">{personDates[personDates.length - 1]} </p>
             </div>
             <div className="GraphInfo">
                     {showMissingData &&
