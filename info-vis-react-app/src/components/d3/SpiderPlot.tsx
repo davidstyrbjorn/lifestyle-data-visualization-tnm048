@@ -8,7 +8,6 @@ import useWindowDimensions from '../../hooks/useWindowDimensions';
 import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
 import { attributeState } from "../../states/attribute-state";
-import getProperty from '../../util/get-property';
 
 import '../../styles/components/line-plot.scss';
 import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
@@ -327,11 +326,11 @@ const SpiderPlot: React.FC<{}> = () => {
                             max={0}
                             valueLabelDisplay="auto"
                         />
-                                        <div id = "play-button-area">
-                    <Button variant="outlined">
-                        Play
-                    </Button>
-                </div>
+                        <div id = "play-button-area">
+                            <Button variant="outlined">
+                                Play
+                            </Button>
+                        </div>
                     </Box>
                 </div>
             </div>
