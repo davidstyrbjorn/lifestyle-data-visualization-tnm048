@@ -27,6 +27,11 @@ const SpiderPlot: React.FC<{}> = () => {
         .remove();
     }
 
+    // Process attribute names to remove underscores
+    const processAttribName = (attrib: string): string => {
+        return attrib.replace(/_/g," ");
+    }
+
     // Set the dimensions and margins of the graph
     let margin = {top: 100, right: 0, bottom: 0, left: 100},
         width = 900 - margin.left - margin.right,
@@ -192,7 +197,6 @@ const SpiderPlot: React.FC<{}> = () => {
 
                         //@ts-ignore
                         let dataVal = attribScales[index](d[item]);
-                        
                         coordinates.push(angleToCoord(angle, dataVal));
                     });
                     return coordinates;
@@ -203,28 +207,6 @@ const SpiderPlot: React.FC<{}> = () => {
 
                     let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
                     let [textX, textY] = angleToCoord(angle, domainRange.max + 2);
-
-                    /*
-                    // Get maximum and minimum values for this attribute
-                    let attributeMax = d3.max(personDataCopy.at(0)!.lifestyle, 
-                        (d) => getProperty(d, attribute as keyof lifestyle) as number)!;
-                    let attributeMin =  d3.min(personDataCopy.at(0)!.lifestyle, 
-                        (d) => getProperty(d, attribute as keyof lifestyle) as number)!;
-
-                    console.log("Atrribute: " + attribute);
-                    console.log("min: " + attributeMin);
-                    console.log("max: " + attributeMax);
-
-                    // Linear scale unique to each attribute
-                    let attributeScale = d3.scaleLinear()
-					    .domain([attributeMin, attributeMax])
-					    .range([1, 5]);
-
-                    attributeScales.push(attributeScale);
-
-                    console.log("Attribscale: " + attributeScale(attributeMax));
-                    */
-                   
 
                     // Draw lines from center to edges of spider plot
                     spiderPlotSvg.append("line")
@@ -241,7 +223,7 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr("x", textX)
                         .attr("y", textY)
                         .attr("fill", "azure")
-                        .text(attribute);
+                        .text(processAttribName(attribute));
 
                     // Draw nodes at path points.
                     spiderPlotSvg.selectAll('spiderPlotNodes')
