@@ -6,6 +6,7 @@ import { useRecoilValue } from 'recoil';
 import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
 import { attributeState } from "../../states/attribute-state";
+import getProperty from '../../util/get-property';
 
 import '../../styles/components/line-plot.scss';
 import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
@@ -151,11 +152,28 @@ const SpiderPlot: React.FC<{}> = () => {
                     return coordinates;
                 }
 
-                attributes.forEach(function (item, index) {
+                attributes.forEach(function (attribute, index) {
                     let angle = (2*Math.PI * index / length) + (Math.PI / 2);
 
                     let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
                     let [textX, textY] = angleToCoord(angle, domainRange.max + 2);
+
+                    // Get maximum and minimum values for this attribute
+                    let attributeMax = d3.max(personDataCopy.at(0)!.lifestyle, 
+                        (d) => getProperty(d, attribute as keyof lifestyle) as number)!;
+                    let attributeMin =  d3.min(personDataCopy.at(0)!.lifestyle, 
+                        (d) => getProperty(d, attribute as keyof lifestyle) as number)!;
+
+                    console.log("Atrribute: " + attribute);
+                    console.log("min: " + attributeMin);
+                    console.log("max: " + attributeMax);
+
+
+                    let attributeScale = d3.scaleLinear() // dont do on every person
+					    .domain([attributeMin, attributeMax])
+					    .range([1, 5]); // @TODO: Remove magic numbers
+
+                    console.log("Attribscale: " + attributeScale(attributeMax));
                     
                     // Draw lines from center to edges of spider plot
                     spiderPlotSvg.append("line")
@@ -172,8 +190,9 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr("x", textX)
                         .attr("y", textY)
                         .attr("fill", "azure")
-                        .text(item);
+                        .text(attribute);
 
+                    /*
                     // Draw nodes at path points.
                     spiderPlotSvg.selectAll('spiderPlotNodes')
                         .data(res[entryIndex])
@@ -182,11 +201,12 @@ const SpiderPlot: React.FC<{}> = () => {
                             .attr('fill', AVAILABLE_COLORS[entryIndex].primary) //@TODO: Fix correct
                             .attr('stroke', 'none')
                             //@ts-ignore
-                            .attr('cx', (d) => angleToCoord(angle, d[item])[0])
+                            .attr('cx', (d) => angleToCoord(angle, d[attribute])[0])
                             //@ts-ignore
-                            .attr('cy', (d) => angleToCoord(angle, d[item])[1])
+                            .attr('cy', (d) => angleToCoord(angle, d[attribute])[1])
                             .attr('r', 10)
                             .attr('z-index', 2);
+                    */
 
                     let line = d3.line()
                         .x(d => d[0])
@@ -209,7 +229,7 @@ const SpiderPlot: React.FC<{}> = () => {
                             .attr("x", angleToCoord(angle, tick)[0])
                             .attr("y", angleToCoord(angle, tick)[1])
                             .attr("text-anchor", "middle")
-                            .text(tick.toString())
+                            .text(attributeScale.invert(tick))
                     ));
 
                 });
