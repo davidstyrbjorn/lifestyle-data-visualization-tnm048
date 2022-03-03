@@ -91,6 +91,7 @@ const SpiderPlot: React.FC<{}> = () => {
         if(personData.length === 0 || !data[0]) return;
 
         else {
+            let attributeScales: d3.ScaleLinear<number, number, number>[] = [];
             res.forEach(function (entry, entryIndex) {
                         
                 if(res[entryIndex].length < 1) {
@@ -146,8 +147,11 @@ const SpiderPlot: React.FC<{}> = () => {
                     const coordinates:[number,number][] = [];
                     attributes.forEach(function (item, index) {
                         let angle = (2*Math.PI * index / length) + (Math.PI / 2);
+
                         //@ts-ignore
-                        coordinates.push(angleToCoord(angle, d[item]));
+                        let dataVal = attributeScales[index](d[item]);
+                        
+                        coordinates.push(angleToCoord(angle, dataVal));
                     });
                     return coordinates;
                 }
@@ -168,10 +172,12 @@ const SpiderPlot: React.FC<{}> = () => {
                     console.log("min: " + attributeMin);
                     console.log("max: " + attributeMax);
 
-
-                    let attributeScale = d3.scaleLinear() // dont do on every person
+                    // Linear scale unique to each attribute
+                    let attributeScale = d3.scaleLinear()
 					    .domain([attributeMin, attributeMax])
-					    .range([1, 5]); // @TODO: Remove magic numbers
+					    .range([1, 5]);
+
+                    attributeScales.push(attributeScale);
 
                     console.log("Attribscale: " + attributeScale(attributeMax));
                     
@@ -192,34 +198,19 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr("fill", "azure")
                         .text(attribute);
 
-                    /*
                     // Draw nodes at path points.
                     spiderPlotSvg.selectAll('spiderPlotNodes')
                         .data(res[entryIndex])
                         .enter()
                         .append('circle')
-                            .attr('fill', AVAILABLE_COLORS[entryIndex].primary) //@TODO: Fix correct
+                            .attr('fill', AVAILABLE_COLORS[entryIndex].primary)
                             .attr('stroke', 'none')
                             //@ts-ignore
-                            .attr('cx', (d) => angleToCoord(angle, d[attribute])[0])
+                            .attr('cx', (d) => angleToCoord(angle, attributeScale(d[attribute]))[0])
                             //@ts-ignore
-                            .attr('cy', (d) => angleToCoord(angle, d[attribute])[1])
+                            .attr('cy', (d) => angleToCoord(angle, attributeScale(d[attribute]))[1])
                             .attr('r', 10)
                             .attr('z-index', 2);
-                    */
-
-                    let line = d3.line()
-                        .x(d => d[0])
-                        .y(d => d[1]);
-
-                    let coordinates = getPathForData(res[entryIndex][0]);
-                    spiderPlotSvg.append("path")
-                        .datum(coordinates)
-                        .attr("d", line)
-                        .attr("fill", AVAILABLE_COLORS[entryIndex].primary)
-                        .attr("stroke-opacity", 1)
-                        .attr("opacity", 0.05);
-
                     
                     // Label circles with tick values
                     ticks.forEach(tick => (
@@ -233,6 +224,17 @@ const SpiderPlot: React.FC<{}> = () => {
                     ));
 
                 });
+                let line = d3.line()
+                .x(d => d[0])
+                .y(d => d[1]);
+
+                let coordinates = getPathForData(res[entryIndex][0]);
+                spiderPlotSvg.append("path")
+                    .datum(coordinates)
+                    .attr("d", line)
+                    .attr("fill", AVAILABLE_COLORS[entryIndex].primary)
+                    .attr("stroke-opacity", 1)
+                    .attr("opacity", 0.2);
              });
  
         }
