@@ -19,7 +19,6 @@ const SpiderPlot: React.FC<{}> = () => {
 
     const [sliderValue, setSliderValue] = useState<number>(0.0);
     const attributeData = useRecoilValue(attributeState);
-    const [minMaxDate, setMinMaxDate] = useState<string[]>(['1', '2']);
 
     // Clear the spider plot svg
     const clearPlot = () => {
@@ -80,8 +79,51 @@ const SpiderPlot: React.FC<{}> = () => {
             })
             res.push(filteredData);
         });
-    } 
+    }
 
+    // Variables for linear scale, used in draw mapping as well
+    const attribScales:d3.ScaleLinear<number, number, never>[] = [];
+    const selectedAttributesMax:number[] = [];
+    const selectedAttributesMin:number[] = [];
+    let maxY;
+    let minY; 
+
+    // Create linear scale with biggest span among all persons
+    data.map(function(person, pidx){
+
+        for (let i = 0; i < attributes.length; i++) {
+            const name = attributes[i]; // Getting names of attributes
+            // Create linear scale for min/max values of each attribute
+            
+            maxY =  Math.max.apply(Math, person.lifestyle.map(function(o) {
+                return (o as any)[name];
+            }));
+            
+            minY =  Math.min.apply(Math, person.lifestyle.map(function(o) {
+                return (o as any)[name];
+            }));
+
+            if (selectedAttributesMax.length < i + 1) { // First entry
+                selectedAttributesMax[i] = maxY;
+            } else if (maxY > selectedAttributesMax[i]) {
+                selectedAttributesMax[i] = maxY;
+            }
+
+            if (selectedAttributesMin.length < i + 1) { // First entry
+                selectedAttributesMin[i] = minY;
+            } else if (minY < selectedAttributesMin[i]) {
+                selectedAttributesMin[i] = minY;
+            }
+
+            let scale = d3.scaleLinear()
+                .domain([selectedAttributesMin[i], selectedAttributesMax[i]])
+                .range([1, 5]);
+
+            attribScales[i] = scale;
+        }
+    });
+
+    console.log(attribScales.length);
 
     const ref = useD3((div: any) =>  {
         // Make space for new plot
@@ -149,7 +191,7 @@ const SpiderPlot: React.FC<{}> = () => {
                         let angle = (2*Math.PI * index / length) + (Math.PI / 2);
 
                         //@ts-ignore
-                        let dataVal = attributeScales[index](d[item]);
+                        let dataVal = attribScales[index](d[item]);
                         
                         coordinates.push(angleToCoord(angle, dataVal));
                     });
@@ -162,6 +204,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
                     let [textX, textY] = angleToCoord(angle, domainRange.max + 2);
 
+                    /*
                     // Get maximum and minimum values for this attribute
                     let attributeMax = d3.max(personDataCopy.at(0)!.lifestyle, 
                         (d) => getProperty(d, attribute as keyof lifestyle) as number)!;
@@ -180,7 +223,9 @@ const SpiderPlot: React.FC<{}> = () => {
                     attributeScales.push(attributeScale);
 
                     console.log("Attribscale: " + attributeScale(attributeMax));
-                    
+                    */
+                   
+
                     // Draw lines from center to edges of spider plot
                     spiderPlotSvg.append("line")
                         .attr("x1", center.x)
@@ -206,9 +251,9 @@ const SpiderPlot: React.FC<{}> = () => {
                             .attr('fill', AVAILABLE_COLORS[entryIndex].primary)
                             .attr('stroke', 'none')
                             //@ts-ignore
-                            .attr('cx', (d) => angleToCoord(angle, attributeScale(d[attribute]))[0])
+                            .attr('cx', (d) => angleToCoord(angle, attribScales[index](d[attribute]))[0])
                             //@ts-ignore
-                            .attr('cy', (d) => angleToCoord(angle, attributeScale(d[attribute]))[1])
+                            .attr('cy', (d) => angleToCoord(angle, attribScales[index](d[attribute]))[1])
                             .attr('r', 10)
                             .attr('z-index', 2);
                     
@@ -220,7 +265,7 @@ const SpiderPlot: React.FC<{}> = () => {
                             .attr("x", angleToCoord(angle, tick)[0])
                             .attr("y", angleToCoord(angle, tick)[1])
                             .attr("text-anchor", "middle")
-                            .text(attributeScale.invert(tick))
+                            .text(attribScales[index].invert(tick))
                     ));
 
                 });
