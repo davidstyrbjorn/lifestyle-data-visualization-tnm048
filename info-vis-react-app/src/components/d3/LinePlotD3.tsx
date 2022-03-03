@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import React, { useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import useD3 from '../../hooks/useD3';
+import useWindowDimensions from '../../hooks/useWindowDimensions';
 import attributeState from '../../states/attribute-state';
 import { filteredPersonData } from '../../states/person-state';
 import '../../styles/components/line-plot.scss';
@@ -15,8 +16,11 @@ const LinePlotD3: React.FC<{}> = () => {
     // Grab the person data
     const personData = useRecoilValue(filteredPersonData);
     const attributeData = useRecoilValue(attributeState);
-    const [sliderValue, setSliderValue] = useState<number[]>([0.0, 1.0]);
+    const [sliderValue, setSliderValue] = useState<number[]>([0.0, 0.3]);
     const [minMaxDate, setMinMaxDate] = useState<string[]>(['1', '2']);
+
+    // Grab the browser window size
+    const window_size = useWindowDimensions();
 
     // d3 helper function
     const make_y_gridlines = (y_scale: any): d3.Axis<d3.AxisDomain> => {
@@ -28,16 +32,13 @@ const LinePlotD3: React.FC<{}> = () => {
         return Math.abs(values[1] - values[0]);
     }
 
-    const ref = useD3((div: any) => {
+    const ref = useD3((_div: any) => {
         if(personData.length <= 0) return;
         if(attributeData.selectedAttributes.length === 0) return;
 
-        // Grab the div width and height
-        const div_size: number[] = [div._groups[0][0].clientWidth, div._groups[0][0].clientHeight]
-        
         // set the dimensions and margins of the graph
-        const width = (div_size[0] * 0.8);
-        const height = (div_size[1] * 0.8);
+        const width = (window_size.width * 0.6);
+        const height = (window_size.height * 0.6);
         const margin = {
             top: 20,
             right: 10,
@@ -70,7 +71,6 @@ const LinePlotD3: React.FC<{}> = () => {
                 date_strings.push(e.date);
             });
 
-
         // Initial maxY and minY! We will later go through and grab the max-maxY from every person
         let maxY = d3.max(personDataCopy.at(0)!.lifestyle, 
             (d) => getProperty(d, attributeString) as number)!;
@@ -78,14 +78,14 @@ const LinePlotD3: React.FC<{}> = () => {
             (d) => getProperty(d, attributeString) as number)!;
         let doMinMax = true;
         // For some attributes we can just directly assign maxY and minY
-        if(attributeString == 'fatigue' || attributeString == 'mood'
-            || attributeString == 'sleep_quality' || attributeString === 'stress')
+        if(attributeString === 'fatigue' || attributeString === 'mood'
+            || attributeString === 'sleep_quality' || attributeString === 'stress')
         {
             minY = 0;
             maxY = 5;
             doMinMax = false;
         }
-        else if(attributeString == 'readiness') {
+        else if(attributeString === 'readiness') {
             minY = 0;
             maxY = 10;
         }   
@@ -202,7 +202,7 @@ const LinePlotD3: React.FC<{}> = () => {
                 .attr('d', d3.line<lifestyle>()
                     .x(function(d: lifestyle) {return (x(timeParser(d.date)!))})
                     .y(function(d: lifestyle) {return y(getProperty(d, attributeString) as number)})
-                    .curve(d3.curveMonotoneX)
+                    // .curve(d3.curveMonotoneX)
                 
             );
 
@@ -269,7 +269,7 @@ const LinePlotD3: React.FC<{}> = () => {
         const d2_pretty = d2!.toISOString().split('T')[0];
         setMinMaxDate([d1_pretty, d2_pretty]);
 
-    }, [personData, attributeData, sliderValue]);
+    }, [personData, attributeData, sliderValue, window_size]);
 
     const handleSliderChange = (_e: Event, v: number | number[], _activeThumb: number) => {
         // Return if the incoming value is NOT an array, something is wrong from the component side
