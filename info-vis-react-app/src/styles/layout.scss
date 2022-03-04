@@ -41,16 +41,17 @@ body {
     flex: 1;
 }
 
+.spider-plot-svg {
+    display: block;
+    margin: auto;
+}
+
+
 .sidebar {
     background-color:azure;
     flex: 1;
     flex-direction: column;
     display: flex;
-}
-
-.spider-plot-svg {
-    display: block;
-    margin: auto;
 }
 
 .sidebar .top {
