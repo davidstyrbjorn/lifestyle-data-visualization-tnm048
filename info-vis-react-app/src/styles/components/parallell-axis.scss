@@ -76,3 +76,41 @@
     margin-left: 1rem;
     margin-right: 1rem;
 }
+
+.toggle-average {
+    display: flex;
+    justify-content: center;
+    //flex-direction: column;
+    align-items: center;
+    flex:1;
+    padding-top: 0rem;
+    padding-bottom: 1rem;
+    background-color: #24211d;
+    width:100%;
+}
+
+.date-display {
+    display: flex;
+    flex-direction: row;
+}
+
+#toggle-average-button {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+}
+
+.graph-acessories-date {
+    flex: 6;
+}
+
+.bottom {
+    display: flex;
+}
+
+.p-legend {
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding-left: 0 rem;
+}

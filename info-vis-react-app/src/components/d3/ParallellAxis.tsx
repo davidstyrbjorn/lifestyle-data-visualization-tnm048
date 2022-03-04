@@ -1,16 +1,13 @@
+import { Button, Checkbox } from '@mui/material';
 import * as d3 from "d3";
 import React, { useEffect, useState } from "react";
-import { RecoilState, useRecoilState, useRecoilValue, useResetRecoilState, useSetRecoilState } from "recoil";
+import { useRecoilValue } from "recoil";
 import useD3 from "../../hooks/useD3";
+import { attributeState } from "../../states/attribute-state";
 import { filteredPersonData } from "../../states/person-state";
 import '../../styles/components/parallell-axis.scss';
-import { attributeState } from "../../states/attribute-state";
-import { AVAILABLE_COLORS, lifestyle } from "../../types/types";
+import { AVAILABLE_COLORS, lifestyle, person_data } from "../../types/types";
 import getProperty from "../../util/get-property";
-import { duration } from "@mui/material";
-import { selectAll } from "d3";
-import { Button, Checkbox } from '@mui/material';
-import { get } from "https";
 
 let showMissingData:boolean = false;
 let showDatePicker:boolean = false;
@@ -55,7 +52,6 @@ const ParallellAxisPlot: React.FC<{}> = () => {
             const height =  (div_size[1] * 0.9) - margin.top - margin.bottom;
             const padding = {top: 50, right: 50, bottom: 50, left: 200}
 
-            console.log(height);
 
             // Only draw background if no previous plot exists
             let previous_svg: any = document.getElementsByClassName('p-axis-plot');
@@ -104,6 +100,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 pd = union;
 
                 personDates = Array.from(pd);
+                personDates.sort();
 
                 for (let i = 0; i < selectedAttributes.length; i++) {
                     const name = selectedAttributes[i]; // Getting names of attributes
@@ -186,9 +183,6 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     drawRes = []
                     drawRes[0] = averageValuesDict;
                 }
-
-
-                console.log("2", drawRes);
 
                 if (noData) {
                     missingDataNew.push(idx);
@@ -305,6 +299,8 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     },[data])   
 
     function incrementDate() {
+        console.log(personDates);
+        console.log(personDates[dateIndex]);
         if (dateIndex < personDates.length) {
             setDateIndex(dateIndex + 1);
             oldDate = personDates[dateIndex];
@@ -326,41 +322,70 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
     return (
         <div className="Visualization">
+
             <div id = {"plot"} ref = {ref}>
                     <div className={'tooltip'}></div>
             </div>
-            <div className="average-values">
-                <Checkbox checked={displayAverageDate} onChange={toggleAverage}/>
-                <p className="InfoText"> Showing average attribute values from </p>
-                <p className="InfoText">{personDates[0]}</p>
-                <p className="InfoText"> to </p>
-                <p className="InfoText">{personDates[personDates.length - 1]} </p>
-            </div>
-            <div className="GraphInfo">
-                    {showMissingData &&
-                    <div className="MissingData">
-                        
-                        <div id="MissingPersons"> 
-                            <p className="InfoText">Person &nbsp;</p>
-                                {
-                                    missingData.map((v: number, idx) => <p className="InfoText" key={idx}>{v + 1} &nbsp; </p>)
-                                }
-                            <p className="InfoText">
-                                is missing data at this date
-                            </p>
+
+            <div className="bottom">
+                <div className='p-legend'>
+                        {data.map((person: person_data, idx: number) => {
+                            return (
+                                <div className='legend-entry' key={idx}>
+                                    <div style={{
+                                        backgroundColor: AVAILABLE_COLORS[idx].primary,
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: 5
+                                    }}></div>
+                                    <p className="InfoText"> &nbsp; {person.name}</p>
+                                </div>
+                            );
+                        })}
+                </div>
+            
+                <div className="graph-acessories-date">
+                    <div className="toggle-average">
+                        <div id="toggle-average-button">
+                            <Checkbox checked={displayAverageDate} onChange={toggleAverage}/>
+                            {!displayAverageDate && <p className="InfoText"> Show average attribute values </p>}
+                        </div>
+                        <div className="date-display">
+                            {displayAverageDate && <p className="InfoText"> Showing average attribute values from &nbsp;</p> }
+                            {!displayAverageDate && <p className="InfoText"> &nbsp; from &nbsp;</p>}
+                            <p className="InfoText">{personDates[0]}</p>
+                            <p className="InfoText">&nbsp; to &nbsp;</p>
+                            <p className="InfoText">{personDates[personDates.length - 1]} </p>
                         </div>
                     </div>
-                    }
 
-                    {showDatePicker &&
-                        <div className="Datepicker">
-                            <Button variant="contained" className="DateButton" onClick={decrementDate}> Previous </Button> 
-                                <p className="DateText"> {personDates[dateIndex]} </p>
-                            <Button variant="contained" className="DateButton" onClick={incrementDate}> Next </Button>
-                        </div>
-                    }
+                    {!displayAverageDate &&
+                    <div className="GraphInfo">
+                            {showMissingData &&
+                            <div className="MissingData">
+                                <div id="MissingPersons"> 
+                                    <p className="InfoText">Person &nbsp;</p>
+                                        {
+                                            missingData.map((v: number, idx) => <p className="InfoText" key={idx}>{v + 1} &nbsp; </p>)
+                                        }
+                                    <p className="InfoText">
+                                        is missing data at this date
+                                    </p>
+                                </div>
+                            </div>
+                            }
+                            {showDatePicker &&
+                                <div className="Datepicker">
+                                    <Button variant="contained" className="DateButton" onClick={decrementDate}> Previous </Button> 
+                                        <p className="DateText"> {personDates[dateIndex]} </p>
+                                    <Button variant="contained" className="DateButton" onClick={incrementDate}> Next </Button>
+                                </div>
+                            }
+                    </div> }
+                </div>
             </div>
         </div>
+
     );
 } 
 
