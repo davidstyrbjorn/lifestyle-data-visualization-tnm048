@@ -1,17 +1,15 @@
+import { Button, Slider } from '@mui/material';
+import { Box } from '@mui/system';
 import * as d3 from 'd3';
 import React, { useState } from 'react';
-import { Slider } from '@mui/material';
-import { Button } from '@mui/material';
-import { Box } from '@mui/system';
 import { useRecoilValue } from 'recoil';
-import useWindowDimensions from '../../hooks/useWindowDimensions';
 import useD3 from '../../hooks/useD3';
-import { filteredPersonData } from '../../states/person-state';
+import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { attributeState } from "../../states/attribute-state";
-import { makeAttributePresentable } from "../../util/attribute-util";
-
+import { filteredPersonData } from '../../states/person-state';
 import '../../styles/components/line-plot.scss';
 import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
+import { makeAttributePresentable } from "../../util/attribute-util";
 
 let animating:boolean = false; // Evil "semi-global" variable to handle animations
 
@@ -185,7 +183,7 @@ const SpiderPlot: React.FC<{}> = () => {
 
                 // Linear range with values ranging from 0-5
                 let domainRange = { min: 0, max: 5 };
-                let scale = d3.scaleLinear()
+                let radialScale = d3.scaleLinear()
                     .domain([domainRange.min, domainRange.max])
                     .range([0, height / 4]);
 
@@ -200,12 +198,12 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr("fill", "none")
                         .attr("stroke", "azure")
                         .attr("stroke-width", strokeWidth)
-                        .attr("r", scale(tick))
+                        .attr("r", radialScale(tick))
                 ));
 
                 // Converts from polar coordinates to cartesian
                 const angleToCoord = (angle: number, value: number): [number, number] => {
-                    let r = scale(value);
+                    let r = radialScale(value);
                     let x = r * Math.cos(angle);
                     let y = r * Math.sin(angle);
                     return [center.x + x, center.y - y];
@@ -262,7 +260,7 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr('cx', (d) => angleToCoord(angle, attribScales[index](d[attribute]))[0])
                         //@ts-ignore
                         .attr('cy', (d) => angleToCoord(angle, attribScales[index](d[attribute]))[1])
-                        .attr('r', 10)
+                        .attr('r', radialScale(0.25)) // Base on scale used for surrounding circles
                         .attr('z-index', 2);
 
 
@@ -271,7 +269,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     ticks.forEach(tick => (
                         spiderPlotSvg.append("text")
                             .attr("fill", "white")
-                            .attr("font-size", 12)
+                            .attr("font-size", radialScale(0.35))
                             .attr("x", angleToCoord(angle, tick)[0])
                             .attr("y", angleToCoord(angle, tick)[1])
                             .attr("text-anchor", "middle")
