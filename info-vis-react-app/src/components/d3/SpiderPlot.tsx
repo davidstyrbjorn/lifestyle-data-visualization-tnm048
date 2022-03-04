@@ -12,6 +12,8 @@ import { attributeState } from "../../states/attribute-state";
 import '../../styles/components/line-plot.scss';
 import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
 
+let animating:boolean = false; // Evil "semi-global" variable to handle animations
+
 // With inspiration from this tutorial: https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
 const SpiderPlot: React.FC<{}> = () => {
     // Grab the person data
@@ -19,11 +21,32 @@ const SpiderPlot: React.FC<{}> = () => {
     const data = useRecoilValue(filteredPersonData);
 
     const [sliderValue, setSliderValue] = useState<number>(0.0);
+    const [buttonLabel, setButtonLabel] = useState("Play");
     const attributeData = useRecoilValue(attributeState);
 
     // Grab the browser window size
     const window_size = useWindowDimensions();
 
+    const handleButtonPress = () => {
+        animating = !animating;
+        if(animating) {
+            setButtonLabel("Stop");
+            animateSlider();
+        }
+    }
+
+    // Animate the slider and plot
+    async function animateSlider() {
+        let sliderVal = sliderValue;
+        while(sliderVal < 0 && animating) {
+            setSliderValue(++sliderVal);
+
+            // Wait half second
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        animating = false;
+        setButtonLabel("Play");
+    }
     // Clear the spider plot svg
     const clearPlot = () => {
         d3.select('#spider_viz')
@@ -321,15 +344,15 @@ const SpiderPlot: React.FC<{}> = () => {
                             getAriaLabel={() => 'Date slider'}
                             value={sliderValue}
                             onChange={handleSliderChange}
+                            disabled={animating}
                             min={-30}
                             step={1}
                             max={0}
                             valueLabelDisplay="auto"
                         />
                         <div id = "play-button-area">
-                            <Button variant="outlined">
-                                Play
-                            </Button>
+                            <Button className="button" variant="outlined"
+                                onClick={() => handleButtonPress()}>{buttonLabel}</Button>
                         </div>
                     </Box>
                 </div>
