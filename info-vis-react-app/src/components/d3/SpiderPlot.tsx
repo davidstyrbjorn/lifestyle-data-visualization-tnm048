@@ -8,6 +8,7 @@ import useWindowDimensions from '../../hooks/useWindowDimensions';
 import useD3 from '../../hooks/useD3';
 import { filteredPersonData } from '../../states/person-state';
 import { attributeState } from "../../states/attribute-state";
+import { makeAttributePresentable } from "../../util/attribute-util";
 
 import '../../styles/components/line-plot.scss';
 import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
@@ -54,16 +55,10 @@ const SpiderPlot: React.FC<{}> = () => {
             .remove();
     }
 
-    // Process attribute names to remove underscores
-    const processAttribName = (attrib: string): string => {
-        return attrib.replace(/_/g, " ");
-    }
-
     // Set the dimensions and margins of the graph
     let margin = { top: 100, right: 0, bottom: 0, left: 100 },
         strokeWidth = 2;
 
-    //let legend_dates: string[] = [];
     let currentDate: string = "";
 
     // Find domain for dates, mostly same as how it works in LinePlot. Maybe move this somewhere where
@@ -76,10 +71,14 @@ const SpiderPlot: React.FC<{}> = () => {
 
     // Get selected attributes from attribute state
     const attributes: string[] = [];
+    const formattedAttributes: string[] = [];
 
     attributeData.availableAttributes.map(function (val, idx) {
-        if (attributeData.selectedAttributes.includes(idx))
+        let formatted = makeAttributePresentable(val);
+        if (attributeData.selectedAttributes.includes(idx)) {
             attributes.push(val);
+            formattedAttributes.push(formatted);
+        }
     });
 
     if (personData.length > 0) {
@@ -250,7 +249,7 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr("x", textX)
                         .attr("y", textY)
                         .attr("fill", "azure")
-                        .text(processAttribName(attribute));
+                        .text(formattedAttributes[index]);
 
                     // Draw nodes at path points.
                     spiderPlotSvg.selectAll('spiderPlotNodes')
