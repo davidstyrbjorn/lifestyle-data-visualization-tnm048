@@ -150,8 +150,8 @@ const SpiderPlot: React.FC<{}> = () => {
     const ref = useD3((div: any) => {
 
         // set the dimensions and margins of the graph
-        const width = (window_size.width * 0.8);
-        const height = (window_size.height * 0.8);
+        const width = (window_size.width * 0.7);
+        const height = (window_size.height * 0.7);
 
         // Center of spider plot circles
         let center = { x: width / 2, y: height / 2 };
