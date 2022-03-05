@@ -1,0 +1,73 @@
+body {
+    padding: 0;
+    margin: 0
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    height:100vh
+}
+
+.visualization-view {
+    background-color: #24211d;
+    flex: 3;
+}
+
+#personList {
+    height: 40%;
+    overflow-y: scroll;
+    white-space: nowrap;
+}
+
+#spiderRoot {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+
+#spider_viz {
+    flex: 5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#bottom-area {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+}
+
+.spider-plot-svg {
+    display: block;
+    margin: auto;
+}
+
+
+.sidebar {
+    background-color:azure;
+    flex: 1;
+    flex-direction: column;
+    display: flex;
+}
+
+.sidebar .top {
+    flex: 1;
+    border-bottom: 6px #C4C4C4 solid;
+}
+
+.sidebar .bot {
+    flex: 1;
+}
+
+.button-row {
+    position: absolute;
+    display: flex;
+}
+
+.button-row .button {
+    margin: 8px;
+}

@@ -13,7 +13,6 @@ export function getPersonData(name: string) : person_data {
 
 export function loadAllPersonDataIntoMap() : Map<string, person_data> {
     const map = new Map<string, person_data>(); // We return this!
-    
     // Iterate over each available person and add correct data to map
     availablePerson.forEach((name: string) => {
         // Add person + the data to the map
