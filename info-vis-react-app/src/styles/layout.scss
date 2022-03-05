@@ -15,9 +15,8 @@ body {
 }
 
 #personList {
-    height: 40%;
-    overflow-y: scroll;
-    white-space: nowrap;
+    display: flex;
+    min-height: min-content; /* needs vendor prefixes */
 }
 
 .spider-plot-svg {
@@ -40,6 +39,9 @@ body {
 
 .sidebar .bot {
     flex: 1;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
 }
 
 .button-row {

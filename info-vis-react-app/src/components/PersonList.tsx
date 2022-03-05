@@ -1,16 +1,16 @@
-import React, { useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import availablePerson, { filteredPersonData, loadedPersonData } from "../states/person-state";
+import React from "react";
+import availablePerson from "../states/person-state";
+import '../styles/components/sidebar.scss';
 import { PersonCheckbox } from "./PersonCheckbox";
 
-import '../styles/components/sidebar.scss';
 
 export const PersonList: React.FC<{}> = () => {
     return(
+        <>
+        <div className="attribute-header">
+            <h2>Select person/s</h2>
+        </div>
         <div id='personList'>
-            <div className="attribute-header">
-                <h2>Select person/s</h2>
-            </div>
             <ul>
                 {/* Map over all people to make list of checkboxes */}
                 {availablePerson.map((name, idx) => (
@@ -18,5 +18,6 @@ export const PersonList: React.FC<{}> = () => {
                 ))}
             </ul>
         </div>
+        </>
     )
 }

@@ -1,7 +1,11 @@
 import { person_data } from "../types/types";
-//import availablePerson from "../states/person-state";
+// import availablePerson from "../states/person-state";
 
-const availablePerson: string[] = ['p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07', 'p08']; 
+const availablePerson: string[] = [
+    'p01', 'p02', 'p03', 'p04',
+    'p05', 'p06', 'p07', 'p08',
+    'p10', 'p11', 'p12', 'p13',
+    'p14', 'p16'];
 
 export function getPersonData(name: string) : person_data {
     // Load from .json file from disk and turn it into person_data

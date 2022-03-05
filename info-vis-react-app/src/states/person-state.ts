@@ -9,7 +9,7 @@ const availablePerson: string[] = [
 'p01', 'p02', 'p03', 'p04',
 'p05', 'p06', 'p07', 'p08',
 'p10', 'p11', 'p12', 'p13',
-'p14', 'p15', 'p16'];
+'p14', 'p16'];
 
 export const loadedPersonData = atom<Map<string, person_data>>({
     key: 'loadedPersonData',

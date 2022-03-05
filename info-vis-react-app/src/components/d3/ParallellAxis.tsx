@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import React, { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 import useD3 from "../../hooks/useD3";
+import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { attributeState } from "../../states/attribute-state";
 import { filteredPersonData } from "../../states/person-state";
 import '../../styles/components/parallell-axis.scss';
@@ -26,6 +27,8 @@ const ParallellAxisPlot: React.FC<{}> = () => {
 
     const colors = AVAILABLE_COLORS // Color list 
 
+    // Grab the browser window size
+    const window_size = useWindowDimensions();
 
     // Update axis depending on data, useD3 handles like useEffect
     const ref = useD3((div: any) => {
@@ -42,16 +45,11 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 }
             }); 
 
-            const div_size: number[] = [div._groups[0][0].clientWidth, div._groups[0][0].clientHeight]
-
-            
-
             // Drawing the canvas
             const margin = {top: 100, right: 50, bottom: 100, left: 50}
-            const width = (div_size[0] * 0.9) - margin.left - margin.right;
-            const height =  (div_size[1] * 0.9) - margin.top - margin.bottom;
+            const width = (window_size.width * 0.7) - margin.left - margin.right;
+            const height =  (window_size.height * 0.7) - margin.top - margin.bottom;
             const padding = {top: 50, right: 50, bottom: 50, left: 200}
-
 
             // Only draw background if no previous plot exists
             let previous_svg: any = document.getElementsByClassName('p-axis-plot');
@@ -320,6 +318,12 @@ const ParallellAxisPlot: React.FC<{}> = () => {
         let tmp:boolean = displayAverageDate;
         tmp = !tmp;
         setDisplayAverageDate(tmp);
+    }
+
+    if(attributeData.selectedAttributes.length < 2 || data.length < 1){
+        return <div className='fallback-container'>
+            <h1 className="fallback-text">Please select atleast one PERSON and atleast two ATTRIBUTES</h1>
+        </div>
     }
 
     return (
