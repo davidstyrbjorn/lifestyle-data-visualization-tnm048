@@ -20,27 +20,6 @@ body {
     white-space: nowrap;
 }
 
-#spiderRoot {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-
-#spider_viz {
-    flex: 5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-#bottom-area {
-    display: flex;
-    flex-direction: row;
-    flex: 1;
-}
-
 .spider-plot-svg {
     display: block;
     margin: auto;

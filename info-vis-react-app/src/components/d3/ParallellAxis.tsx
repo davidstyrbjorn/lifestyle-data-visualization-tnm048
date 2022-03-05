@@ -208,8 +208,10 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .style("opacity", 1.0)
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-                let tooltip_div = d3.select(".tooltip")
-                .style("opacity", 0); 
+                let tooltip_div = d3.select(".axisTooltip")
+                .style("opacity", 0);
+
+                console.log(tooltip_div)
 
                 // Draw an extra transparent line with extra thickness to make hovering easier
                 svg
@@ -324,7 +326,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
         <div className="Visualization">
 
             <div id = {"plot"} ref = {ref}>
-                    <div className={'tooltip'}></div>
+                    <div className = {'axisTooltip'}></div>
             </div>
 
             <div className="bottom">

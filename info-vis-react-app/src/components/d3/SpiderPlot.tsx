@@ -8,6 +8,7 @@ import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { attributeState } from "../../states/attribute-state";
 import { filteredPersonData } from '../../states/person-state';
 import '../../styles/components/line-plot.scss';
+import '../../styles/components/spider-plot.scss';
 import { AVAILABLE_COLORS, lifestyle, person_data } from '../../types/types';
 import { makeAttributePresentable } from "../../util/attribute-util";
 
@@ -315,7 +316,7 @@ const SpiderPlot: React.FC<{}> = () => {
     return (
         <div id='spiderRoot'>
             <div ref={ref} id={'spider_viz'}></div>
-            <div id="bottom-area">
+            <div id="bottom-area-spider">
                 <div className='legend'>
                     {personData.map((person: person_data, idx: number) => {
                         return (
