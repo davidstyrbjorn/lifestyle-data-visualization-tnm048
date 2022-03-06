@@ -7,8 +7,9 @@ import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { attributeState } from "../../states/attribute-state";
 import { filteredPersonData } from "../../states/person-state";
 import '../../styles/components/parallell-axis.scss';
-import { AVAILABLE_COLORS, lifestyle, person_data } from "../../types/types";
+import { attribute_options, AVAILABLE_COLORS, lifestyle, person_data } from "../../types/types";
 import getProperty from "../../util/get-property";
+import {makeAttributePresentable} from "../../util/attribute-util";
 
 let showMissingData:boolean = false;
 let showDatePicker:boolean = false;
@@ -259,7 +260,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                 .style("text-anchor", "middle")
                 .attr("y", -9)
                 .attr("class", "axis-text")
-                .text(function(d) { return d; });
+                .text(function(d) { return makeAttributePresentable(d as attribute_options); });
 			});
 
         }
@@ -329,26 +330,29 @@ const ParallellAxisPlot: React.FC<{}> = () => {
     return (
         <div className="Visualization">
 
-            <div id = {"plot"} ref = {ref}>
-                    <div className = {'axisTooltip'}></div>
+            <div className='p-legend'>
+                {data.map((person: person_data, idx: number) => {
+                    return (
+                        <div className='legend-entry' key={idx}>
+                            <div style={{
+                                backgroundColor: AVAILABLE_COLORS[idx].primary,
+                                width: 24,
+                                height: 24,
+                                borderRadius: 5
+                            }}></div>
+                            <p className="InfoText"> &nbsp; {person.name}</p>
+                        </div>
+                    );
+                })}
             </div>
-
+            
             <div className="bottom">
-                <div className='p-legend'>
-                        {data.map((person: person_data, idx: number) => {
-                            return (
-                                <div className='legend-entry' key={idx}>
-                                    <div style={{
-                                        backgroundColor: AVAILABLE_COLORS[idx].primary,
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 5
-                                    }}></div>
-                                    <p className="InfoText"> &nbsp; {person.name}</p>
-                                </div>
-                            );
-                        })}
+                <div id = {"plot"} ref = {ref}>
+                        <div className = {'axisTooltip'}></div>
                 </div>
+
+            
+
             
                 <div className="graph-acessories-date">
                     <div className="toggle-average">
@@ -369,6 +373,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                     <div className="GraphInfo">
                             {showMissingData &&
                             <div className="MissingData">
+                                { missingData.length > 0 &&
                                 <div id="MissingPersons"> 
                                     <p className="InfoText">Person &nbsp;</p>
                                         {
@@ -377,7 +382,7 @@ const ParallellAxisPlot: React.FC<{}> = () => {
                                     <p className="InfoText">
                                         is missing data at this date
                                     </p>
-                                </div>
+                                </div>}
                             </div>
                             }
                             {showDatePicker &&

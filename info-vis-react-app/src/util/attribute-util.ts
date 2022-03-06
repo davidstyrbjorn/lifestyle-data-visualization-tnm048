@@ -6,11 +6,11 @@ export function makeAttributePresentable(attributeOpt: attribute_options){
         "fatigue": "Fatigue",
         "mood": "Mood",
         "readiness": "Readiness",
-        "sleep_duration_h": "Sleep Duration",
+        "sleep_duration_h": "Sleep Duration (Hours)",
         "sleep_quality": "Sleep Quality",
         "stress": "Stress",
         "glasses_of_fluid": "Glasses of Fluid",
-        "bodyweight": "Bodyweight"
+        "bodyweight": "Bodyweight (Kg)"
     }
     return dict[attributeOpt];
 }
