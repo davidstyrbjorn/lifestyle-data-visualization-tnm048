@@ -165,91 +165,95 @@ const SpiderPlot: React.FC<{}> = () => {
         if (personData.length === 0 || !data[0]) return;
 
         else {
+            // If we haven't added the svg before
+            let previous_svg: any = document.getElementsByClassName('spider-plot-svg');
+            if (previous_svg.length === 0) {
+                d3.select('#spider_viz')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .attr('class', 'spider-plot-svg')
+            }
+
+            let spiderPlotSvg = d3.select('.spider-plot-svg');
+
+            // Linear range with values ranging from 0-5
+            let domainRange = { min: 0, max: 5 };
+            let radialScale = d3.scaleLinear()
+                .domain([domainRange.min, domainRange.max])
+                .range([0, height / 4]);
+
+            // Tick values displayed along circle border
+            let ticks = [1, 2, 3, 4, 5];
+
+            // Add circles representing values 1-5
+            ticks.forEach(tick => (
+                spiderPlotSvg.append("circle")
+                    .attr("cx", center.x)
+                    .attr("cy", center.y)
+                    .attr("fill", "none")
+                    .attr("stroke", "azure")
+                    .attr("stroke-width", strokeWidth)
+                    .attr("r", radialScale(tick))
+            ));
+
+            // Converts from polar coordinates to cartesian
+            const angleToCoord = (angle: number, value: number): [number, number] => {
+                let r = radialScale(value);
+                let x = r * Math.cos(angle);
+                let y = r * Math.sin(angle);
+                return [center.x + x, center.y - y];
+            }
+
+            // Amount of attributes
+            let length = attributes.length;
+
+            // Given a lifestyle, return list of coordinate pairs for the path
+            const getPathForData = (d: lifestyle): [number, number][] => {
+                // List of coordinate pairs
+                const coordinates: [number, number][] = [];
+                attributes.forEach(function (item, index) {
+                    let angle = (2 * Math.PI * index / length) + (Math.PI / 2);
+
+                    //@ts-ignore
+                    let dataVal = attribScales[index](d[item]);
+                    coordinates.push(angleToCoord(angle, dataVal));
+                });
+                return coordinates;
+            }
+
+            attributes.forEach(function (attribute, index) {
+                let angle = (2 * Math.PI * index / length) + (Math.PI / 2);
+                let [textX, textY] = angleToCoord(angle, domainRange.max + 3);
+                let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
+
+                // Text fields marking the different attribute names
+                spiderPlotSvg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", textX)
+                .attr("y", textY)
+                .attr("fill", "azure")
+                .text(formattedAttributes[index]);
+
+                // Draw lines from center to edges of spider plot
+                spiderPlotSvg.append("line")
+                .attr("x1", center.x)
+                .attr("y1", center.y)
+                .attr("x2", lineCoordX)
+                .attr("y2", lineCoordY)
+                .attr("stroke", "azure")
+                .attr("stroke-width", strokeWidth);
+            });
+
+
             lifestyleResults.forEach(function (entry, entryIndex) {
 
                 if (lifestyleResults[entryIndex].length < 1) {
                     return; // @TODO: Display error message if this happens
                 }
 
-                // If we haven't added the svg before
-                let previous_svg: any = document.getElementsByClassName('spider-plot-svg');
-                if (previous_svg.length === 0) {
-                    d3.select('#spider_viz')
-                        .append('svg')
-                        .attr('width', width)
-                        .attr('height', height)
-                        .attr('class', 'spider-plot-svg')
-                }
-
-                let spiderPlotSvg = d3.select('.spider-plot-svg');
-
-                // Linear range with values ranging from 0-5
-                let domainRange = { min: 0, max: 5 };
-                let radialScale = d3.scaleLinear()
-                    .domain([domainRange.min, domainRange.max])
-                    .range([0, height / 4]);
-
-                // Tick values displayed along circle border
-                let ticks = [1, 2, 3, 4, 5];
-
-                // Add circles representing values 1-5
-                ticks.forEach(tick => (
-                    spiderPlotSvg.append("circle")
-                        .attr("cx", center.x)
-                        .attr("cy", center.y)
-                        .attr("fill", "none")
-                        .attr("stroke", "azure")
-                        .attr("stroke-width", strokeWidth)
-                        .attr("r", radialScale(tick))
-                ));
-
-                // Converts from polar coordinates to cartesian
-                const angleToCoord = (angle: number, value: number): [number, number] => {
-                    let r = radialScale(value);
-                    let x = r * Math.cos(angle);
-                    let y = r * Math.sin(angle);
-                    return [center.x + x, center.y - y];
-                }
-
-                // Amount of attributes
-                let length = attributes.length;
-
-                // Given a lifestyle, return list of coordinate pairs for the path
-                const getPathForData = (d: lifestyle): [number, number][] => {
-                    // List of coordinate pairs
-                    const coordinates: [number, number][] = [];
-                    attributes.forEach(function (item, index) {
-                        let angle = (2 * Math.PI * index / length) + (Math.PI / 2);
-
-                        //@ts-ignore
-                        let dataVal = attribScales[index](d[item]);
-                        coordinates.push(angleToCoord(angle, dataVal));
-                    });
-                    return coordinates;
-                }
-
                 attributes.forEach(function (attribute, index) {
                     let angle = (2 * Math.PI * index / length) + (Math.PI / 2);
-
-                    let [lineCoordX, lineCoordY] = angleToCoord(angle, domainRange.max);
-                    let [textX, textY] = angleToCoord(angle, domainRange.max + 3);
-
-                    // Draw lines from center to edges of spider plot
-                    spiderPlotSvg.append("line")
-                        .attr("x1", center.x)
-                        .attr("y1", center.y)
-                        .attr("x2", lineCoordX)
-                        .attr("y2", lineCoordY)
-                        .attr("stroke", "azure")
-                        .attr("stroke-width", strokeWidth);
-
-                    // Text fields marking the different attribute names
-                    spiderPlotSvg.append("text")
-                        .attr("text-anchor", "middle")
-                        .attr("x", textX)
-                        .attr("y", textY)
-                        .attr("fill", "azure")
-                        .text(formattedAttributes[index]);
 
                     // Draw nodes at path points.
                     spiderPlotSvg.selectAll('spiderPlotNodes')
@@ -265,8 +269,6 @@ const SpiderPlot: React.FC<{}> = () => {
                         .attr('r', radialScale(0.25)) // Base on scale used for surrounding circles
                         .attr('z-index', 2);
 
-
-
                     // Label circles with tick values
                     ticks.forEach(tick => (
                         spiderPlotSvg.append("text")
@@ -279,6 +281,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     ));
 
                 });
+                
                 let line = d3.line()
                     .x(d => d[0])
                     .y(d => d[1]);
