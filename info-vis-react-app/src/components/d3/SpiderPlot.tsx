@@ -66,7 +66,7 @@ const SpiderPlot: React.FC<{}> = () => {
 
     // Process data beforehand
     let personDataCopy = [...personData];
-    let res: lifestyle[][] = [];
+    let lifestyleResults: lifestyle[][] = [];
 
     // Get selected attributes from attribute state
     const attributes: string[] = [];
@@ -101,7 +101,7 @@ const SpiderPlot: React.FC<{}> = () => {
                 // Get current date from slider
                 return obj.date === dateResult;
             })
-            res.push(filteredData);
+            lifestyleResults.push(filteredData);
         });
     }
 
@@ -112,16 +112,18 @@ const SpiderPlot: React.FC<{}> = () => {
 
     // Create linear scale with biggest span among all persons
     data.map(function (person, pidx) {
+        // Should base domain on 30 last entries.
+        let shortenedLifestyle = person.lifestyle.slice(Math.max(person.lifestyle.length - 30, 0));
 
         for (let i = 0; i < attributes.length; i++) {
             const name = attributes[i]; // Getting names of attributes
             // Create linear scale for min/max values of each attribute
 
-            let maxY = Math.max.apply(Math, person.lifestyle.map(function (o) {
+            let maxY = Math.max.apply(Math, shortenedLifestyle.map(function (o) {
                 return (o as any)[name];
             }));
 
-            let minY = Math.min.apply(Math, person.lifestyle.map(function (o) {
+            let minY = Math.min.apply(Math, shortenedLifestyle.map(function (o) {
                 return (o as any)[name];
             }));
 
@@ -163,10 +165,9 @@ const SpiderPlot: React.FC<{}> = () => {
         if (personData.length === 0 || !data[0]) return;
 
         else {
-            let attributeScales: d3.ScaleLinear<number, number, number>[] = [];
-            res.forEach(function (entry, entryIndex) {
+            lifestyleResults.forEach(function (entry, entryIndex) {
 
-                if (res[entryIndex].length < 1) {
+                if (lifestyleResults[entryIndex].length < 1) {
                     return; // @TODO: Display error message if this happens
                 }
 
@@ -252,7 +253,7 @@ const SpiderPlot: React.FC<{}> = () => {
 
                     // Draw nodes at path points.
                     spiderPlotSvg.selectAll('spiderPlotNodes')
-                        .data(res[entryIndex])
+                        .data(lifestyleResults[entryIndex])
                         .enter()
                         .append('circle')
                         .attr('fill', AVAILABLE_COLORS[entryIndex].primary)
@@ -282,7 +283,7 @@ const SpiderPlot: React.FC<{}> = () => {
                     .x(d => d[0])
                     .y(d => d[1]);
 
-                let coordinates = getPathForData(res[entryIndex][0]);
+                let coordinates = getPathForData(lifestyleResults[entryIndex][0]);
                 spiderPlotSvg.append("path")
                     .datum(coordinates)
                     .attr("d", line)
