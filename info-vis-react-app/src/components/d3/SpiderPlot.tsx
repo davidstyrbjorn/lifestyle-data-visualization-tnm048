@@ -112,8 +112,8 @@ const SpiderPlot: React.FC<{}> = () => {
 
     // Create linear scale with biggest span among all persons
     data.map(function (person, pidx) {
-        // Should base domain on 30 last entries.
-        let shortenedLifestyle = person.lifestyle.slice(Math.max(person.lifestyle.length - 30, 0));
+        // Should base domain on 31 last entries.
+        let shortenedLifestyle = person.lifestyle.slice(Math.max(person.lifestyle.length - 31, 0));
 
         for (let i = 0; i < attributes.length; i++) {
             const name = attributes[i]; // Getting names of attributes
