@@ -21,6 +21,17 @@
     }
 }
 
+.container {
+    display: flex;
+    flex-direction: row;
+}
+
+.line-plot-checkbox {
+    position: absolute;
+    width: 32;
+    float: right;
+}
+
 .bottom-area {
     flex: 1.4;
     display: flex;
@@ -122,6 +133,17 @@
         color: white;
         text-align-last: center;
         text-align: center;
+    }
+}
+
+.average-toggle {
+    display: flex;
+    flex: 0.5;
+    justify-content: center;
+    align-items: center;
+
+    p {
+        color: white;
     }
 }
 

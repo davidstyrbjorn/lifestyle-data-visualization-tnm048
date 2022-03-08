@@ -1,4 +1,4 @@
-import { Slider } from '@mui/material';
+import { Checkbox, Slider } from '@mui/material';
 import * as d3 from 'd3';
 import React, { useState } from 'react';
 import { useRecoilValue } from 'recoil';
@@ -18,6 +18,7 @@ const LinePlotD3: React.FC<{}> = () => {
     const attributeData = useRecoilValue(attributeState);
     const [sliderValue, setSliderValue] = useState<number[]>([0.0, 0.3]);
     const [minMaxDate, setMinMaxDate] = useState<string[]>(['1', '2']);
+    const [onlyShowAverages, setOnlyShowAverages] = useState(true);
 
     // Grab the browser window size
     const window_size = useWindowDimensions();
@@ -180,58 +181,59 @@ const LinePlotD3: React.FC<{}> = () => {
                 return d >= d1! && d <= d2!;
             })
 
-            svg.append('path')
-                .datum(data)
-                .attr('fill', 'none')
-                .attr('stroke', AVAILABLE_COLORS[idx].primary)
-                .attr('stroke-width', 3.5)
-                // Add some tooltip interaction to the lines
-                .on('mouseover', (event: MouseEvent) => {
-                    const X = event.pageX; 
-                    const Y = event.pageY - 120;
-                    const content = `
-                        <h4>${p_data.name}</h4> 
-                    `;
-                    showTooltip(tooltip_div, content, X, Y);
-                })
-                .on('mouseout', (_d) => {
-                    tooltip_div.transition()		
-                        .duration(500)		
-                        .style("opacity", 0);	
-                })
-                .attr('d', d3.line<lifestyle>()
-                    .x(function(d: lifestyle) {return (x(timeParser(d.date)!))})
-                    .y(function(d: lifestyle) {return y(getProperty(d, attributeString) as number)})
-                    // .curve(d3.curveMonotoneX)
-                
-            );
+            if(onlyShowAverages){
+                svg.append('path')
+                    .datum(data)
+                    .attr('fill', 'none')
+                    .attr('stroke', AVAILABLE_COLORS[idx].primary)
+                    .attr('stroke-width', 3.5)
+                    // Add some tooltip interaction to the lines
+                    .on('mouseover', (event: MouseEvent) => {
+                        const X = event.pageX; 
+                        const Y = event.pageY - 120;
+                        const content = `
+                            <h4>${p_data.name}</h4> 
+                        `;
+                        showTooltip(tooltip_div, content, X, Y);
+                    })
+                    .on('mouseout', (_d) => {
+                        tooltip_div.transition()		
+                            .duration(500)		
+                            .style("opacity", 0);	
+                    })
+                    .attr('d', d3.line<lifestyle>()
+                        .x(function(d: lifestyle) {return (x(timeParser(d.date)!))})
+                        .y(function(d: lifestyle) {return y(getProperty(d, attributeString) as number)})
+                        // .curve(d3.curveMonotoneX)  
+                );
 
-            // Now add all our dots
-            svg.selectAll('myCircles')
-            .data(data)
-            .enter()
-            .append('circle')
-                .attr('fill', AVAILABLE_COLORS[idx].primary)
-                .attr('stroke', 'none')
-                .attr('cx', (d: lifestyle) => x(timeParser(d.date)!))
-                .attr('cy', (d: lifestyle) => y(getProperty(d, attributeString) as number))
-                .attr('r', 7)
-                // Add some tooltip interaction to the dots
-                .on('mouseover', (event: MouseEvent, d: lifestyle) => {
-                    const X = event.pageX+10; 
-                    const Y = event.pageY - 130;
-                    const content = `
-                        <h4>${p_data.name}</h4>
-                        <p> ${attributeString} value: <strong>${getProperty(d, attributeString)}</strong></p>
-                        <p>Date: <strong>${d.date}</strong></p>
-                    `;
-                    showTooltip(tooltip_div, content, X, Y);
-                })
-                .on('mouseout', (_d) => {
-                    tooltip_div.transition()		
-                        .duration(500)		
-                        .style("opacity", 0);	
-                })
+                // Now add all our dots
+                svg.selectAll('myCircles')
+                .data(data)
+                .enter()
+                .append('circle')
+                    .attr('fill', AVAILABLE_COLORS[idx].primary)
+                    .attr('stroke', 'none')
+                    .attr('cx', (d: lifestyle) => x(timeParser(d.date)!))
+                    .attr('cy', (d: lifestyle) => y(getProperty(d, attributeString) as number))
+                    .attr('r', 7)
+                    // Add some tooltip interaction to the dots
+                    .on('mouseover', (event: MouseEvent, d: lifestyle) => {
+                        const X = event.pageX+10; 
+                        const Y = event.pageY - 130;
+                        const content = `
+                            <h4>${p_data.name}</h4>
+                            <p> ${attributeString} value: <strong>${getProperty(d, attributeString)}</strong></p>
+                            <p>Date: <strong>${d.date}</strong></p>
+                        `;
+                        showTooltip(tooltip_div, content, X, Y);
+                    })
+                    .on('mouseout', (_d) => {
+                        tooltip_div.transition()		
+                            .duration(500)		
+                            .style("opacity", 0);	
+                    })
+            }
 
             // Calculate the average for this person
             let avg = d3.mean(data, (entry) => getProperty(entry, attributeString) as number);
@@ -269,7 +271,7 @@ const LinePlotD3: React.FC<{}> = () => {
         const d2_pretty = d2!.toISOString().split('T')[0];
         setMinMaxDate([d1_pretty, d2_pretty]);
 
-    }, [personData, attributeData, sliderValue, window_size]);
+    }, [personData, attributeData, sliderValue, window_size, onlyShowAverages]);
 
     const handleSliderChange = (_e: Event, v: number | number[], _activeThumb: number) => {
         // Return if the incoming value is NOT an array, something is wrong from the component side
@@ -339,6 +341,14 @@ const LinePlotD3: React.FC<{}> = () => {
                             />
                         </div>
                     </div>
+                </div>
+                <div className={'average-toggle'}>
+                    <p>Average only?</p>
+                    <Checkbox 
+                        onClick={() => setOnlyShowAverages(!onlyShowAverages)} 
+                        value={onlyShowAverages}
+                        color={'info'}
+                    />
                 </div>
             </div>           
 		</div>
