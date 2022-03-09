@@ -39,22 +39,22 @@ export type person_data = {
 
 export const AVAILABLE_COLORS = [
     {
+        primary: '#FFC142'
+    },
+    {
+        primary: '#D200A8'
+    },
+    {
         primary: '#88F7E2',
     },
     {
         primary: '#44D492'
     },
     {
-        primary: '#F5EB67'
-    },
-    {
-        primary: '#5793FF'
-    },
-    {
         primary: '#8BE836'
     },
     {
-        primary: '#FFC142'
+        primary: '#F5EB67'
     },
     {
         primary: '#E83938'
@@ -66,13 +66,13 @@ export const AVAILABLE_COLORS = [
         primary: '#FF00CC'
     },
     {
+        primary: '#5793FF'
+    },
+    {
         primary: '#FFBA00'
     },
     {
         primary: '#FFE4FA'
-    },
-    {
-        primary: '#D200A8'
     },
     {
         primary: '#D200A8'
